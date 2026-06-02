@@ -1,4 +1,4 @@
-import { CircleDot, Loader2, Shuffle, Users } from "lucide-react";
+import { CircleDot, Loader2, Shuffle, Trophy, Users } from "lucide-react";
 
 import { formatRelativeTimeForCard } from "@/lib/format-relative-time";
 
@@ -10,6 +10,7 @@ import {
 import {
   formatSessionRecordLabel,
   getPlayerSessionStats,
+  isSessionUndefeated,
   type PlayerSessionStats,
 } from "@/lib/games-played-map";
 import { capitalizeNameWords, formatPlayerDisplayName } from "@/lib/utils";
@@ -66,6 +67,16 @@ function TeamPlayers({
               <p className="court-player-session-record">
                 {formatSessionRecordLabel(stats)}
               </p>
+              {isSessionUndefeated(stats) ? (
+                <Badge
+                  variant="outline"
+                  className="queue-undefeated-badge mt-1 whitespace-nowrap"
+                  aria-label="Undefeated — 3 or more wins, no losses"
+                >
+                  <Trophy className="queue-undefeated-badge-icon" aria-hidden />
+                  <span className="queue-undefeated-badge-text">Undefeated</span>
+                </Badge>
+              ) : null}
             </div>
           </li>
         );

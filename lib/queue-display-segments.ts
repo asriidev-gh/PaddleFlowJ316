@@ -36,6 +36,11 @@ export type QueueBracketDeck<T extends QueueEntryForDisplay = QueueEntryForDispl
   slots: QueueBracketDeckSlot<T>[];
 };
 
+export type BuildQueueDisplayOptions = {
+  /** Initial 18-player phase: show unpaired tail and allow winner-deck fill from them. */
+  initialUnpairedPhase?: boolean;
+};
+
 export type QueueDisplayLayout<T extends QueueEntryForDisplay = QueueEntryForDisplay> = {
   nextOnCourt: QueueCourtMatchSegment<T> | null;
   upcomingCourts: QueueCourtMatchSegment<T>[];
@@ -195,10 +200,12 @@ function buildPromotedOpenCourtSegments<T extends QueueEntryForDisplay>(
 
 function buildWaitingLayout<T extends QueueEntryForDisplay>(
   remaining: T[],
+  options: BuildQueueDisplayOptions = {},
 ): Pick<
   QueueDisplayLayout<T>,
   "upcomingCourts" | "unpaired" | "winnersDeck" | "losersDeck"
 > {
+  const initialUnpairedPhase = options.initialUnpairedPhase === true;
   const usedGlobal = new Set<string>();
   const upcomingCourts: QueueCourtMatchSegment<T>[] = [];
 
@@ -216,11 +223,13 @@ function buildWaitingLayout<T extends QueueEntryForDisplay>(
   const usedForDecks = new Set(
     [...poolsBase.usedEntryIds].map((id) => entryIdString(id)),
   );
-  const winnerSlot = fillWinnerDeckOpponents(
-    poolsBase.winnerSlot,
-    pickWinnerDeckOpponentCandidates(fifoNormals.map(toFillEntry)),
-    usedForDecks,
-  );
+  const winnerSlot = initialUnpairedPhase
+    ? fillWinnerDeckOpponents(
+        poolsBase.winnerSlot,
+        pickWinnerDeckOpponentCandidates(fifoNormals.map(toFillEntry)),
+        usedForDecks,
+      )
+    : poolsBase.winnerSlot;
   const pools = { ...poolsBase, winnerSlot, usedEntryIds: usedForDecks };
 
   const winnerOpponentIds = new Set(
@@ -262,11 +271,13 @@ function buildWaitingLayout<T extends QueueEntryForDisplay>(
   for (const id of usedForDecks) addUsedId(usedGlobal, id);
   const decks = buildDeckLayoutFromPools(remaining, pools);
 
-  const unpaired = sortEntries(
-    removeByIds(remaining, usedGlobal).filter(
-      (e) => e.queueType === "normal" && e.deckPlacement !== "open_court",
-    ),
-  ).slice(0, MAX_TAIL_UNPAIRED_NORMALS);
+  const unpaired = initialUnpairedPhase
+    ? sortEntries(
+        removeByIds(remaining, usedGlobal).filter(
+          (e) => e.queueType === "normal" && e.deckPlacement !== "open_court",
+        ),
+      ).slice(0, MAX_TAIL_UNPAIRED_NORMALS)
+    : [];
 
   return {
     upcomingCourts,
@@ -278,6 +289,7 @@ function buildWaitingLayout<T extends QueueEntryForDisplay>(
 
 export function buildQueueDisplayLayout<T extends QueueEntryForDisplay>(
   entries: T[],
+  options: BuildQueueDisplayOptions = {},
 ): QueueDisplayLayout<T> {
   if (entries.length === 0) {
     return {
@@ -304,20 +316,20 @@ export function buildQueueDisplayLayout<T extends QueueEntryForDisplay>(
       ]);
       return {
         nextOnCourt,
-        ...buildWaitingLayout(removeByIds(sorted, usedIds)),
+        ...buildWaitingLayout(removeByIds(sorted, usedIds), options),
       };
     }
 
     return {
       nextOnCourt: null,
-      ...buildWaitingLayout(sorted),
+      ...buildWaitingLayout(sorted, options),
     };
   }
 
   if (!selection) {
     return {
       nextOnCourt: null,
-      ...buildWaitingLayout(sorted),
+      ...buildWaitingLayout(sorted, options),
     };
   }
 
@@ -330,7 +342,7 @@ export function buildQueueDisplayLayout<T extends QueueEntryForDisplay>(
 
   return {
     nextOnCourt,
-    ...buildWaitingLayout(remaining),
+    ...buildWaitingLayout(remaining, options),
   };
 }
 

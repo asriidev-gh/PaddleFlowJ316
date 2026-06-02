@@ -4,6 +4,7 @@ import { Types } from "mongoose";
 import { Court } from "@/models/Court";
 import { LeaderboardStats } from "@/models/LeaderboardStats";
 import { MatchHistory } from "@/models/MatchHistory";
+import { PickleGame } from "@/models/PickleGame";
 import { QueueEntry } from "@/models/QueueEntry";
 
 export async function startGameOnFirstAvailableCourt(gameId: string) {
@@ -12,15 +13,28 @@ export async function startGameOnFirstAvailableCourt(gameId: string) {
     throw new Error("No empty court available.");
   }
 
-  const entries = await QueueEntry.find({ gameId, status: "queued" }).sort({ registeredAt: 1 }).limit(4);
+  const game = await PickleGame.findOne({ gameId }).select("queueType");
+  const queueFilter: Record<string, unknown> = { gameId, status: "queued" };
+  if (game?.queueType === "winLoseBracket") {
+    queueFilter.queueType = "normal";
+  }
+
+  const entries = await QueueEntry.find(queueFilter).sort({ registeredAt: 1 }).limit(4);
   if (entries.length < 4) {
     throw new Error("Not enough queued players. At least 4 players are required.");
   }
-
   const [p1, p2, p3, p4] = entries;
   await QueueEntry.updateMany(
     { _id: { $in: entries.map((entry) => entry._id) } },
-    { $set: { status: "on_court" } },
+    {
+      $set: {
+        status: "on_court",
+        pairGroupId: null,
+        deckPlacement: null,
+        openCourtGroupId: null,
+        openCourtTeam: null,
+      },
+    },
   );
 
   court.status = "active";
@@ -30,6 +44,113 @@ export async function startGameOnFirstAvailableCourt(gameId: string) {
   await court.save();
 
   return court;
+}
+
+async function persistQueueTailOrder(gameId: string) {
+  const queue = await QueueEntry.find({ gameId, status: "queued" }).sort({ registeredAt: 1 });
+  await persistQueueOrder(queue.map((entry) => ({ _id: entry._id, registeredAt: entry.registeredAt })));
+}
+
+async function resolveBracketPairsToMainQueue(gameId: string) {
+  const queued = await QueueEntry.find({ gameId, status: "queued" }).sort({ registeredAt: 1 });
+
+  const byPairGroup = (
+    queueType: "winner" | "loser",
+    rows: typeof queued,
+  ): Array<(typeof queued)[number][]> => {
+    const grouped = rows
+      .filter((entry) => entry.queueType === queueType && entry.deckPlacement !== "open_court")
+      .reduce<Map<string, (typeof queued)[number][]>>((map, entry) => {
+        const key = entry.pairGroupId ?? `${queueType}:${entry._id.toString()}`;
+        const list = map.get(key) ?? [];
+        list.push(entry);
+        map.set(key, list);
+        return map;
+      }, new Map());
+    return [...grouped.values()]
+      .filter((group) => group.length === 2)
+      .sort(
+        (a, b) =>
+          Math.min(+new Date(a[0].registeredAt), +new Date(a[1].registeredAt)) -
+          Math.min(+new Date(b[0].registeredAt), +new Date(b[1].registeredAt)),
+      );
+  };
+
+  const winnerPairs = byPairGroup("winner", queued);
+  const loserPairs = byPairGroup("loser", queued);
+
+  const queuedNormals = queued.filter((entry) => entry.queueType === "normal");
+  const completedMatchCount = await MatchHistory.countDocuments({ gameId });
+  // Initial 18-player phase only: tail unpaired (e.g. p17/p18) may complete the first winner deck.
+  const allowInitialUnpaired = completedMatchCount === 1;
+  const unpairedNormals =
+    allowInitialUnpaired && queuedNormals.length % 4 === 2 ? queuedNormals.slice(-2) : [];
+
+  const completeBracketMatch = async (
+    pairA: (typeof queued)[number][],
+    pairB: (typeof queued)[number][],
+    bracketSource: "winner_bracket" | "loser_bracket",
+  ) => {
+    const consumeEntries = [...pairA, ...pairB];
+    await QueueEntry.updateMany(
+      { _id: { $in: consumeEntries.map((entry) => entry._id) } },
+      {
+        $set: {
+          status: "done",
+          deckPlacement: null,
+          openCourtGroupId: null,
+          openCourtTeam: null,
+        },
+      },
+    );
+
+    const tail = await QueueEntry.find({ gameId, status: "queued" })
+      .sort({ registeredAt: -1 })
+      .limit(1)
+      .select("registeredAt");
+    const base = tail[0]?.registeredAt ? new Date(tail[0].registeredAt).getTime() : Date.now();
+
+    await QueueEntry.create(
+      consumeEntries.map((entry, index) => {
+        const preservedResult =
+          entry.lastMatchResult && entry.lastMatchResult !== "none" ? entry.lastMatchResult : null;
+        const fallbackResult =
+          bracketSource === "winner_bracket" && entry.queueType === "winner"
+            ? "win"
+            : bracketSource === "loser_bracket" && entry.queueType === "loser"
+              ? "loss"
+              : "none";
+
+        return {
+          gameId,
+          playerId: entry.playerId,
+          status: "queued",
+          queueType: "normal",
+          pairGroupId: null,
+          bracketSource,
+          registeredAt: new Date(base + (index + 1) * 1000),
+          lastMatchResult: (preservedResult ?? fallbackResult) as "win" | "loss" | "none",
+          winStreak: 0,
+        };
+      }),
+    );
+  };
+
+  // Winners deck: initial phase may use tail unpaired once; after that, winner pair + winner pair only.
+  if (allowInitialUnpaired && winnerPairs.length >= 1 && unpairedNormals.length === 2) {
+    await completeBracketMatch(winnerPairs[0], unpairedNormals, "winner_bracket");
+  } else if (winnerPairs.length >= 2) {
+    await completeBracketMatch(winnerPairs[0], winnerPairs[1], "winner_bracket");
+  }
+
+  // Losers deck standard completion with the next losing pair.
+  const refreshed = await QueueEntry.find({ gameId, status: "queued" }).sort({ registeredAt: 1 });
+  const refreshedLoserPairs = byPairGroup("loser", refreshed);
+  if (refreshedLoserPairs.length >= 2) {
+    await completeBracketMatch(refreshedLoserPairs[0], refreshedLoserPairs[1], "loser_bracket");
+  }
+
+  await persistQueueTailOrder(gameId);
 }
 
 type CourtSlot = { playerId: Types.ObjectId; queueEntryId: Types.ObjectId };
@@ -232,6 +353,7 @@ export async function endGameAndRequeue(input: {
   teamAScore?: number;
   teamBScore?: number;
 }) {
+  const game = await PickleGame.findOne({ gameId: input.gameId }).select("queueType");
   const court = await Court.findOne({
     gameId: input.gameId,
     courtNumber: input.courtNumber,
@@ -253,6 +375,7 @@ export async function endGameAndRequeue(input: {
       status: "queued",
       queueType: "winner",
       pairGroupId: winnerPairGroupId,
+      deckPlacement: game?.queueType === "winLoseBracket" ? "deck" : null,
       registeredAt: now,
       lastMatchResult: "win",
       winStreak: 1,
@@ -263,6 +386,7 @@ export async function endGameAndRequeue(input: {
       status: "queued",
       queueType: "loser",
       pairGroupId: loserPairGroupId,
+      deckPlacement: game?.queueType === "winLoseBracket" ? "deck" : null,
       registeredAt: now,
       lastMatchResult: "loss",
       winStreak: 0,
@@ -305,6 +429,10 @@ export async function endGameAndRequeue(input: {
     { _id: { $in: [...court.teamA.queueEntryIds, ...court.teamB.queueEntryIds] } },
     { $set: { status: "done" } },
   );
+
+  if (game?.queueType === "winLoseBracket") {
+    await resolveBracketPairsToMainQueue(input.gameId);
+  }
 
   court.status = "empty";
   court.teamA = { playerIds: [], queueEntryIds: [] };

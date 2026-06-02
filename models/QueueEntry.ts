@@ -18,6 +18,11 @@ const queueEntrySchema = new Schema(
     deckPlacement: { type: String, enum: ["deck", "open_court"], default: null },
     openCourtGroupId: { type: String, default: null },
     openCourtTeam: { type: String, enum: ["A", "B"], default: null },
+    bracketSource: {
+      type: String,
+      enum: ["winner_bracket", "loser_bracket"],
+      default: null,
+    },
     registeredAt: { type: Date, required: true, default: () => new Date() },
     winStreak: { type: Number, default: 0 },
     lastMatchResult: { type: String, enum: ["win", "loss", "none"], default: "none" },

@@ -26,6 +26,8 @@ import { GameQrDialog } from "@/components/game/game-qr-dialog";
 import { promptIfRegistrationFull } from "@/components/game/registration-capacity-prompt";
 import { MatchHistoryList, type MatchHistoryView } from "@/components/game/match-history-list";
 import { FillCourtConfirmDialog } from "@/components/game/fill-court-confirm-dialog";
+import { QueueBracketDeckContainer } from "@/components/game/queue-bracket-deck";
+import { QueueMatchPreviewCard } from "@/components/game/queue-match-preview";
 import {
   ReplacePlayerDialog,
   type ReplacePlayerDialogState,
@@ -38,12 +40,13 @@ import {
 } from "@/lib/games-played-map";
 import type { GameLeaderboardRecapRow } from "@/lib/game-leaderboard-recap";
 import type { SessionInsight } from "@/lib/session-insights";
+import { buildQueueDisplayLayout } from "@/lib/queue-display-segments";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { isDemoOpenPlayTitle } from "@/lib/demo-open-play";
+import { canResetGame } from "@/lib/feature-flags";
 import {
   clearQueueHighlightPlayerId,
   getActiveQueueHighlightPlayerId,
@@ -66,6 +69,7 @@ type GamePayload = {
   game: {
     title: string;
     openPlayType: string;
+    queueType?: "normal" | "winLoseBracket";
     courtCount: number;
     gameId: string;
     status: "draft" | "active" | "ended";
@@ -526,7 +530,26 @@ export function GameDashboard({ mode = "operator" }: GameDashboardProps) {
       ),
     [data?.checkedOut, playerSessionStats],
   );
+  const isWinLoseBracketGame = data?.game?.queueType === "winLoseBracket";
+  const hasMatchResults = (data?.matches?.length ?? 0) > 0;
+  const queueDisplayLayout = useMemo(
+    () =>
+      buildQueueDisplayLayout(queueWithStats, {
+        initialUnpairedPhase: isWinLoseBracketGame && !hasMatchResults,
+      }),
+    [queueWithStats, isWinLoseBracketGame, hasMatchResults],
+  );
+  const bracketFifoQueue = useMemo(
+    () => queueDisplayLayout.upcomingCourts.filter((segment) => segment.mode === "fifo"),
+    [queueDisplayLayout.upcomingCourts],
+  );
   const waitingLineEntries = useMemo(() => queueWithStats.slice(4), [queueWithStats]);
+  const replacePendingEntryId = useMemo(() => {
+    if (!replaceMutation.isPending) return null;
+    const sourceIndex = replaceMutation.variables?.sourceIndex;
+    if (typeof sourceIndex !== "number") return null;
+    return queueWithStats[sourceIndex]?._id ?? null;
+  }, [replaceMutation.isPending, replaceMutation.variables, queueWithStats]);
 
   /** Re-read on every queue update so highlight never drops after refetch or reorder. */
   const selfHighlightPlayerId = useMemo(
@@ -615,6 +638,10 @@ export function GameDashboard({ mode = "operator" }: GameDashboardProps) {
       ? Math.max(0, endGameWinnerScoreParsed - 1)
       : undefined;
 
+  const isWinLoseBracket = game.queueType === "winLoseBracket";
+  const showInitialUnpairedSection = isWinLoseBracket && !hasMatchResults;
+  const allowGameReset = canResetGame(game.title);
+
   return (
     <main
       className={cn(
@@ -654,6 +681,9 @@ export function GameDashboard({ mode = "operator" }: GameDashboardProps) {
                     </Badge>
                   ) : null}
                   <Badge>{game.openPlayType}</Badge>
+                  <Badge variant="outline">
+                    Queue type: {isWinLoseBracket ? "Win Lose Bracket" : "FIFO"}
+                  </Badge>
                   <Badge variant="outline">Courts: {game.courtCount}</Badge>
                   <Badge variant="outline">Queue: {queueWithStats.length}</Badge>
                   <Badge variant={game.status === "ended" ? "destructive" : "outline"}>
@@ -718,7 +748,7 @@ export function GameDashboard({ mode = "operator" }: GameDashboardProps) {
                   {endOpenPlayMutation.isPending ? "Ending..." : "End Open Play"}
                 </Button>
               ) : null}
-              {!readOnly && isDemoOpenPlayTitle(game.title) ? (
+              {!readOnly && allowGameReset ? (
                 <Button
                   size="lg"
                   variant="destructive"
@@ -789,7 +819,7 @@ export function GameDashboard({ mode = "operator" }: GameDashboardProps) {
                 <p className="text-muted-foreground">Queue is empty.</p>
               ) : (
                 <>
-                  {queueWithStats.length > 0 ? (
+                  {queueWithStats.length > 0 && !isWinLoseBracket ? (
                     <div className="queue-next-up-group">
                       <div className="queue-next-up-banner">
                         <div className="flex items-center gap-2">
@@ -845,7 +875,142 @@ export function GameDashboard({ mode = "operator" }: GameDashboardProps) {
                       </div>
                     </div>
                   ) : null}
-                  {queueWithStats.length > 4 ? (
+                  {isWinLoseBracket ? (
+                    <div className="queue-waiting-group space-y-4">
+                      {queueDisplayLayout.nextOnCourt ? (
+                        <section className="rounded-xl border-2 border-primary/40 bg-primary/5 p-3 shadow-sm sm:p-4">
+                          <div className="mb-3 flex items-center justify-between border-b border-primary/20 pb-2">
+                            <p className="text-sm font-semibold text-primary">Next on court</p>
+                            <Badge variant="outline" className="border-primary/30 text-primary">
+                              Priority
+                            </Badge>
+                          </div>
+                          <QueueMatchPreviewCard
+                            segment={queueDisplayLayout.nextOnCourt}
+                            hideControls={hideControls}
+                            onRemove={hideControls ? undefined : confirmRemoveFromQueue}
+                            onReplace={
+                              hideControls || waitingLineEntries.length === 0
+                                ? undefined
+                                : (entry) => {
+                                    const sourceIndex = queueWithStats.findIndex(
+                                      (item) => item._id === entry._id,
+                                    );
+                                    if (sourceIndex < 0) return;
+                                    setReplaceDialog({ sourceIndex, sourceEntry: entry });
+                                  }
+                            }
+                            replacePendingEntryId={replacePendingEntryId}
+                            removePendingEntryId={removeMutation.isPending ? removeMutation.variables : null}
+                            highlightedPlayerId={selfHighlightPlayerId}
+                            compact
+                          />
+                        </section>
+                      ) : null}
+
+                      <section className="rounded-xl border bg-muted/20 p-3 sm:p-4">
+                        <div className="mb-3 border-b pb-2">
+                          <p className="text-sm font-semibold">Waiting in line</p>
+                        </div>
+                        <div className="space-y-3">
+                          {bracketFifoQueue.length > 0 ? (
+                            bracketFifoQueue.map((segment, index) => (
+                              <QueueMatchPreviewCard
+                                key={`fifo-${segment.teamA.map((entry) => entry._id).join("-")}-${index}`}
+                                segment={segment}
+                                queueSlotLabel={`Q${index + 1}`}
+                                hideControls={hideControls}
+                                compact
+                                onRemove={hideControls ? undefined : confirmRemoveFromQueue}
+                                removePendingEntryId={removeMutation.isPending ? removeMutation.variables : null}
+                                highlightedPlayerId={selfHighlightPlayerId}
+                              />
+                            ))
+                          ) : (
+                            <p className="caption px-1 text-muted-foreground">
+                              No full FIFO foursome waiting.
+                            </p>
+                          )}
+                        </div>
+                      </section>
+
+                      {showInitialUnpairedSection ? (
+                        <section className="rounded-xl border bg-muted/20 p-3 sm:p-4">
+                          <div className="mb-3 border-b pb-2">
+                            <p className="text-sm font-semibold">Unpaired</p>
+                          </div>
+                          {queueDisplayLayout.unpaired.length > 0 ? (
+                            <div className="space-y-2">
+                              {queueDisplayLayout.unpaired.map((entry) => {
+                                const queueIndex = queueWithStats.findIndex((e) => e._id === entry._id);
+                                return (
+                                  <QueueEntryRow
+                                    key={entry._id}
+                                    entry={entry}
+                                    index={queueIndex >= 0 ? queueIndex : 0}
+                                    isNextUp={false}
+                                    inWaitingLine
+                                    canReplace={false}
+                                    onReplace={() => {}}
+                                    replacePending={false}
+                                    hideReplacePanel
+                                    onRemove={hideControls ? undefined : () => confirmRemoveFromQueue(entry)}
+                                    removePending={
+                                      !hideControls &&
+                                      removeMutation.isPending &&
+                                      removeMutation.variables === entry._id
+                                    }
+                                    highlighted={
+                                      selfHighlightPlayerId != null &&
+                                      queueEntryPlayerId(entry) === selfHighlightPlayerId
+                                    }
+                                  />
+                                );
+                              })}
+                            </div>
+                          ) : (
+                            <p className="caption px-1 text-muted-foreground">No unpaired players.</p>
+                          )}
+                        </section>
+                      ) : null}
+
+                      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+                        <section className="rounded-xl border bg-muted/20 p-3 sm:p-4">
+                          <div className="mb-3 border-b pb-2">
+                            <p className="text-sm font-semibold">Winner Deck</p>
+                          </div>
+                          {queueDisplayLayout.winnersDeck ? (
+                            <QueueBracketDeckContainer
+                              deck={queueDisplayLayout.winnersDeck}
+                              hideControls={hideControls}
+                              onRemove={hideControls ? undefined : confirmRemoveFromQueue}
+                              removePendingEntryId={removeMutation.isPending ? removeMutation.variables : null}
+                              highlightedPlayerId={selfHighlightPlayerId}
+                            />
+                          ) : (
+                            <p className="caption px-1 text-muted-foreground">No players in Winner Deck.</p>
+                          )}
+                        </section>
+
+                        <section className="rounded-xl border bg-muted/20 p-3 sm:p-4">
+                          <div className="mb-3 border-b pb-2">
+                            <p className="text-sm font-semibold">Loser Deck</p>
+                          </div>
+                          {queueDisplayLayout.losersDeck ? (
+                            <QueueBracketDeckContainer
+                              deck={queueDisplayLayout.losersDeck}
+                              hideControls={hideControls}
+                              onRemove={hideControls ? undefined : confirmRemoveFromQueue}
+                              removePendingEntryId={removeMutation.isPending ? removeMutation.variables : null}
+                              highlightedPlayerId={selfHighlightPlayerId}
+                            />
+                          ) : (
+                            <p className="caption px-1 text-muted-foreground">No players in Loser Deck.</p>
+                          )}
+                        </section>
+                      </div>
+                    </div>
+                  ) : queueWithStats.length > 4 ? (
                     <div className="queue-waiting-group">
                       <div className="queue-waiting-header">
                         <Button

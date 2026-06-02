@@ -36,6 +36,7 @@ export async function POST(request: Request) {
     const game = await PickleGame.create({
       title: payload.title,
       openPlayType: payload.openPlayType,
+      queueType: payload.queueType,
       courtCount: payload.courtCount,
       expectedPlayers,
       strictPlayerCount,

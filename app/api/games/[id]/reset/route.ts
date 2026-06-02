@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { connectToDatabase } from "@/lib/db";
-import { isDemoOpenPlayTitle } from "@/lib/demo-open-play";
+import { canResetGame } from "@/lib/feature-flags";
 import { Court } from "@/models/Court";
 import { LeaderboardStats } from "@/models/LeaderboardStats";
 import { MatchHistory } from "@/models/MatchHistory";
@@ -17,9 +17,9 @@ export async function POST(_: Request, { params }: { params: Promise<{ id: strin
     const { id: gameId } = await params;
     const game = await PickleGame.findOne({ gameId, ownerId: authUser.userId });
     if (!game) return NextResponse.json({ message: "Game not found." }, { status: 404 });
-    if (!isDemoOpenPlayTitle(game.title)) {
+    if (!canResetGame(game.title)) {
       return NextResponse.json(
-        { message: "Reset is only available for demo open play." },
+        { message: "Reset is not enabled for this game." },
         { status: 403 },
       );
     }

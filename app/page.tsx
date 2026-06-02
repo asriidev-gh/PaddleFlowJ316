@@ -66,6 +66,7 @@ type GameCard = {
   title: string;
   gameId: string;
   openPlayType: string;
+  queueType?: "normal" | "winLoseBracket";
   courtCount: number;
   expectedPlayers: number;
   strictPlayerCount?: boolean;
@@ -73,6 +74,10 @@ type GameCard = {
   status: "draft" | "active" | "ended";
   updatedAt?: string;
 };
+
+function getQueueTypeLabel(queueType: GameCard["queueType"]) {
+  return queueType === "winLoseBracket" ? "Win Lose Bracket" : "FIFO";
+}
 
 function GameMetaRow({ icon: Icon, children }: { icon: LucideIcon; children: ReactNode }) {
   return (
@@ -101,6 +106,7 @@ function GameMeta({
         Expected: {game.expectedPlayers}
         {game.strictPlayerCount === true ? " (strict)" : ""}
       </GameMetaRow>
+      <GameMetaRow icon={LayoutGrid}>Queue type: {getQueueTypeLabel(game.queueType)}</GameMetaRow>
       {variant === "past" && game.updatedAt ? (
         <GameMetaRow icon={Clock}>
           Ended{" "}
@@ -183,13 +189,17 @@ function GameListInfoGrouped({
         Expected: {game.expectedPlayers}
         {game.strictPlayerCount === true ? " (strict)" : ""}
       </span>
+      <LayoutGrid className={cn(metaIconClass, "col-start-1 row-start-5 self-center")} aria-hidden />
+      <span className="col-start-2 row-start-5 text-xs text-muted-foreground md:text-sm">
+        Queue type: {getQueueTypeLabel(game.queueType)}
+      </span>
       {variant === "past" && game.updatedAt ? (
         <>
           <Clock
-            className={cn(metaIconClass, "col-start-1 row-start-5 self-center")}
+            className={cn(metaIconClass, "col-start-1 row-start-6 self-center")}
             aria-hidden
           />
-          <span className="col-start-2 row-start-5 text-xs text-muted-foreground md:text-sm">
+          <span className="col-start-2 row-start-6 text-xs text-muted-foreground md:text-sm">
             Ended{" "}
             <span suppressHydrationWarning>
               {formatDistanceToNow(new Date(game.updatedAt), { addSuffix: true })}

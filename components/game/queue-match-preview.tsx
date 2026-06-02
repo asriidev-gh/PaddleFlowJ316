@@ -1,8 +1,12 @@
-import { Clock, Link2, LogOut, Swords, Trophy, Users } from "lucide-react";
+import { ArrowLeftRight, Clock, Link2, LogOut, Swords, Trophy, Users } from "lucide-react";
 
 import { PlayerAvatar } from "@/components/game/player-avatar";
 import type { QueueEntryView } from "@/components/game/queue-entry-row";
-import { formatUpcomingGameBadgeLabel } from "@/lib/games-played-map";
+import {
+  formatSessionRecordLabel,
+  formatUpcomingGameBadgeLabel,
+  isSessionUndefeated,
+} from "@/lib/games-played-map";
 import { queueEntryPlayerId } from "@/lib/queue-highlight";
 import type { QueueCourtMatchSegment } from "@/lib/queue-display-segments";
 import { Badge } from "@/components/ui/badge";
@@ -41,7 +45,7 @@ function getMatchPreviewMeta(segment: QueueCourtMatchSegment<QueueEntryView>): M
   }
   return {
     title: "Open court",
-    hint: "Next four in line by sign-up order (slots 1–2 vs 3–4).",
+    hint: "",
     status: "ready",
     statusLabel: "Ready to fill",
     variant: "normal",
@@ -59,6 +63,19 @@ function MatchPreviewIcon({ variant }: { variant: MatchPreviewMeta["variant"] })
   if (variant === "winner") return <Trophy className={className} aria-hidden />;
   if (variant === "loser") return <Swords className={className} aria-hidden />;
   return <Users className={className} aria-hidden />;
+}
+
+function UndefeatedBadge({ className }: { className?: string }) {
+  return (
+    <Badge
+      variant="outline"
+      className={cn("queue-undefeated-badge whitespace-nowrap", className)}
+      aria-label="Undefeated — 3 or more wins, no losses"
+    >
+      <Trophy className="queue-undefeated-badge-icon" aria-hidden />
+      <span className="queue-undefeated-badge-text">Undefeated</span>
+    </Badge>
+  );
 }
 
 type MatchPreviewPlayerProps = {
@@ -178,13 +195,113 @@ function MatchPreviewTeam({
   );
 }
 
+function CompactOpenCourtPlayerRow({
+  entry,
+  slotLabel,
+  highlighted,
+  hideControls,
+  onReplace,
+  replacePending,
+  onRemove,
+  removePending,
+}: {
+  entry: QueueEntryView;
+  slotLabel: string;
+  highlighted?: boolean;
+  hideControls?: boolean;
+  onReplace?: (entry: QueueEntryView) => void;
+  replacePending?: boolean;
+  onRemove?: (entry: QueueEntryView) => void;
+  removePending?: boolean;
+}) {
+  const stats = {
+    wins: entry.wins ?? 0,
+    losses: entry.losses ?? 0,
+    gamesPlayed: (entry.wins ?? 0) + (entry.losses ?? 0),
+  };
+  const isUndefeated = isSessionUndefeated(stats);
+  const recordLabel = formatSessionRecordLabel(stats);
+
+  return (
+    <div
+      className={cn(
+        "flex items-center justify-between gap-2 rounded-lg border bg-card/50 px-2 py-1",
+        highlighted && "queue-entry-highlighted",
+      )}
+    >
+      <div className="flex min-w-0 items-center gap-2">
+        <span className="rounded-md border px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
+          {slotLabel}
+        </span>
+        <PlayerAvatar
+          player={entry.playerId}
+          size="sm"
+          className="!size-9"
+        />
+        <div className="min-w-0">
+          <p className="truncate text-xs font-medium leading-tight text-foreground">
+            {formatPlayerDisplayName(entry.playerId.firstName, entry.playerId.lastName)}
+          </p>
+          <p className="caption truncate text-[0.65rem] text-muted-foreground">
+            {formatLastMatchLine(entry.lastMatchResult)}
+          </p>
+          <div className="mt-0.5 flex flex-wrap items-center gap-1">
+            <Badge variant="outline" className="h-5 px-1.5 text-[10px]">
+              {formatUpcomingGameBadgeLabel(entry.gamesPlayed ?? 0)}
+            </Badge>
+            {isUndefeated ? (
+              <UndefeatedBadge className="h-5 px-1.5 text-[10px]" />
+            ) : null}
+            <Badge variant="outline" className="h-5 px-1.5 text-[10px]">
+              {recordLabel}
+            </Badge>
+          </div>
+        </div>
+      </div>
+
+      {!hideControls ? (
+        <div className="flex items-center gap-1">
+          {onReplace ? (
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 px-2 py-0 text-xs"
+              onClick={() => onReplace(entry)}
+              disabled={replacePending}
+            >
+              <ArrowLeftRight className="mr-1.5 h-3.5 w-3.5" />
+              Replace
+            </Button>
+          ) : null}
+          {onRemove ? (
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 px-2 py-0 text-xs"
+              onClick={() => onRemove(entry)}
+              disabled={removePending}
+            >
+              <LogOut className="mr-1.5 h-3.5 w-3.5" />
+              Check out
+            </Button>
+          ) : null}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 export type QueueMatchPreviewCardProps = {
   segment: QueueCourtMatchSegment<QueueEntryView>;
   queueSlotLabel?: string;
   hideControls?: boolean;
   onRemove?: (entry: QueueEntryView) => void;
+  onReplace?: (entry: QueueEntryView) => void;
+  replacePendingEntryId?: string | null;
   removePendingEntryId?: string | null;
   highlightedPlayerId?: string | null;
+  /** Compact card for Open court previews (reduces vertical whitespace). */
+  compact?: boolean;
 };
 
 export function QueueMatchPreviewCard({
@@ -192,8 +309,11 @@ export function QueueMatchPreviewCard({
   queueSlotLabel,
   hideControls,
   onRemove,
+  onReplace,
+  replacePendingEntryId,
   removePendingEntryId,
   highlightedPlayerId,
+  compact = false,
 }: QueueMatchPreviewCardProps) {
   const meta = getMatchPreviewMeta(segment);
   const teamBAreTailNormals =
@@ -210,52 +330,108 @@ export function QueueMatchPreviewCard({
         ? { a: "Losers · pair A", b: "Losers · pair B" }
         : { a: "Slots 1–2", b: "Slots 3–4" };
 
+  const isCompactOpenCourt = compact && segment.mode === "fifo" && meta.variant === "normal";
+
   return (
     <article
-      className={cn("queue-match-preview", `queue-match-preview--${meta.variant}`)}
+      className={cn(
+        "queue-match-preview border bg-card/70 shadow-sm",
+        compact
+          ? "rounded-lg p-2 sm:p-3"
+          : "rounded-xl p-3 sm:p-4",
+        `queue-match-preview--${meta.variant}`,
+      )}
       aria-label={meta.title}
     >
-      <header className="queue-match-preview-header">
-        <div className="queue-match-preview-header-main">
+      <header
+        className={cn(
+          "queue-match-preview-header flex items-start justify-between gap-2 border-b pb-2",
+          compact ? "mb-2" : "mb-3 pb-3",
+        )}
+      >
+        <div className="flex min-w-0 items-start gap-2">
           {queueSlotLabel ? (
-            <span className="queue-match-preview-index" aria-hidden>
+            <span className="queue-match-preview-index shrink-0" aria-hidden>
               {queueSlotLabel}
             </span>
           ) : null}
           <MatchPreviewIcon variant={meta.variant} />
-          <div className="min-w-0">
+          <div className="min-w-0 space-y-1">
             <h4 className="queue-match-preview-title">{meta.title}</h4>
-            <p className="queue-match-preview-hint">{meta.hint}</p>
+            {meta.hint ? (
+              <p
+                className={cn(
+                  "queue-match-preview-hint",
+                  compact ? "min-h-[1.8rem]" : "min-h-[2.5rem]",
+                )}
+              >
+                {meta.hint}
+              </p>
+            ) : null}
           </div>
         </div>
-        <Badge variant="outline" className="queue-match-preview-status queue-match-preview-status--ready shrink-0">
-          {meta.statusLabel}
-        </Badge>
+        {segment.mode !== "fifo" ? (
+          <Badge
+            variant="outline"
+            className="queue-match-preview-status queue-match-preview-status--ready mt-0.5 shrink-0"
+          >
+            {meta.statusLabel}
+          </Badge>
+        ) : null}
       </header>
-      <div className="queue-match-preview-body">
-        <MatchPreviewTeam
-          teamLabel={teamLabels.a}
-          variant={meta.variant}
-          players={segment.teamA}
-          hideControls={hideControls}
-          onRemove={onRemove}
-          removePendingEntryId={removePendingEntryId}
-          highlightedPlayerId={highlightedPlayerId}
-        />
-        <div className="queue-match-preview-vs" aria-hidden>
-          <span className="queue-match-preview-vs-puck">vs</span>
+
+      {isCompactOpenCourt ? (
+        <div className="space-y-1.5">
+          {[...segment.teamA, ...segment.teamB].map((entry, index) => {
+            const slotLabel = index < 2 ? `A${index + 1}` : `B${index - 1}`;
+            return (
+              <CompactOpenCourtPlayerRow
+                key={entry._id}
+                entry={entry}
+                slotLabel={slotLabel}
+                highlighted={
+                  highlightedPlayerId != null && queueEntryPlayerId(entry) === highlightedPlayerId
+                }
+                hideControls={hideControls}
+                onReplace={onReplace}
+                replacePending={replacePendingEntryId === entry._id}
+                onRemove={onRemove}
+                removePending={removePendingEntryId === entry._id}
+              />
+            );
+          })}
         </div>
-        <MatchPreviewTeam
-          teamLabel={teamLabels.b}
-          variant={meta.variant}
-          players={segment.teamB}
-          waiting={Boolean(segment.teamBNeedsOpponent)}
-          hideControls={hideControls}
-          onRemove={onRemove}
-          removePendingEntryId={removePendingEntryId}
-          highlightedPlayerId={highlightedPlayerId}
-        />
-      </div>
+      ) : (
+        <div
+          className={cn(
+            "queue-match-preview-body grid grid-cols-1 xl:items-stretch xl:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]",
+            compact ? "gap-2" : "gap-3",
+          )}
+        >
+          <MatchPreviewTeam
+            teamLabel={teamLabels.a}
+            variant={meta.variant}
+            players={segment.teamA}
+            hideControls={hideControls}
+            onRemove={onRemove}
+            removePendingEntryId={removePendingEntryId}
+            highlightedPlayerId={highlightedPlayerId}
+          />
+          <div className="queue-match-preview-vs self-center justify-self-center" aria-hidden>
+            <span className="queue-match-preview-vs-puck">vs</span>
+          </div>
+          <MatchPreviewTeam
+            teamLabel={teamLabels.b}
+            variant={meta.variant}
+            players={segment.teamB}
+            waiting={Boolean(segment.teamBNeedsOpponent)}
+            hideControls={hideControls}
+            onRemove={onRemove}
+            removePendingEntryId={removePendingEntryId}
+            highlightedPlayerId={highlightedPlayerId}
+          />
+        </div>
+      )}
     </article>
   );
 }

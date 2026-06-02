@@ -17,10 +17,25 @@ import { useUiStore } from "@/store/ui-store";
 const types = OPEN_PLAY_TYPES;
 
 type RegistrationMode = "self" | "owner";
+type QueueType = "normal" | "winLoseBracket";
+
+const QUEUE_TYPE_OPTIONS: Array<{ value: QueueType; label: string; description: string }> = [
+  {
+    value: "normal",
+    label: "Normal Queuing",
+    description: "First In First Out Flow",
+  },
+  {
+    value: "winLoseBracket",
+    label: "Win & Lose Bracket",
+    description: "Win and Lose Bracket Flow",
+  },
+];
 
 const INITIAL_FORM = {
   title: "",
   openPlayType: "Beginner" as (typeof types)[number],
+  queueType: "normal" as QueueType,
   courtCount: 2,
   expectedPlayers: 24,
   strictPlayerCount: false,
@@ -324,7 +339,7 @@ export function CreateGameWizard() {
           ) : null}
 
           {stepKind === "title" ? (
-            <div className="mx-auto w-full max-w-md space-y-3">
+            <div className="mx-auto w-full max-w-md space-y-4">
               <Label htmlFor="title" className="text-base">
                 Game title
               </Label>
@@ -335,6 +350,25 @@ export function CreateGameWizard() {
                 value={form.title}
                 onChange={(event) => setForm((prev) => ({ ...prev, title: event.target.value }))}
               />
+              <div className="space-y-2">
+                <Label className="text-base">Queue type</Label>
+                <div className="grid grid-cols-1 gap-3">
+                  {QUEUE_TYPE_OPTIONS.map((option) => (
+                    <Button
+                      key={option.value}
+                      type="button"
+                      variant={form.queueType === option.value ? "default" : "outline"}
+                      className="h-auto min-h-14 w-full flex-col items-start justify-center gap-1 px-4 py-3 text-left whitespace-normal"
+                      onClick={() => setForm((prev) => ({ ...prev, queueType: option.value }))}
+                    >
+                      <span className="text-sm font-semibold leading-snug">{option.label}</span>
+                      <span className="text-[11px] font-normal leading-snug opacity-80">
+                        {option.description}
+                      </span>
+                    </Button>
+                  ))}
+                </div>
+              </div>
             </div>
           ) : null}
         </div>

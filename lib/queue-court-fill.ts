@@ -61,6 +61,8 @@ export type BuildDeckPoolsOptions = {
    * (next-on-court + bracket decks + upcoming FIFO, then tail unpaired).
    */
   matchQueuePreviewOpponents?: boolean;
+  /** Initial phase only: winner deck may pair with tail unpaired normals (e.g. p17/p18). */
+  allowInitialUnpairedFill?: boolean;
 };
 
 type DeckSlotState = {
@@ -208,7 +210,8 @@ function buildWinnerDeckSlot(
   const pairs = completePairs(pool);
   if (pairs.length === 0) return null;
 
-  const pair = pairs[pairs.length - 1];
+  // Keep deck display FIFO: oldest waiting winner pair stays in deck first.
+  const pair = pairs[0];
   for (const e of pair) usedEntryIds.add(entryIdString(e._id));
 
   const slot: DeckPoolSlot = {
@@ -220,6 +223,10 @@ function buildWinnerDeckSlot(
   };
 
   if (options.skipWinnerOpponentFill) {
+    return slot;
+  }
+
+  if (options.allowInitialUnpairedFill === false) {
     return slot;
   }
 

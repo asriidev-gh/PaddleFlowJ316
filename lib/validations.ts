@@ -13,6 +13,7 @@ export const createGameSchema = z
   .object({
     title: z.string().min(2, "Game title is required.").max(80),
     openPlayType: openPlayTypeSchema,
+    queueType: z.enum(["normal", "winLoseBracket"]).default("normal"),
     courtCount: z.coerce.number().int().min(1).max(20),
     expectedPlayers: z.coerce.number().int().min(1).max(300),
     strictPlayerCount: z.boolean().default(false),
@@ -21,6 +22,23 @@ export const createGameSchema = z
     allowQrRegistration: z.boolean().optional(),
   })
   .superRefine((data, ctx) => {
+    if (data.queueType === "winLoseBracket") {
+      if (data.expectedPlayers < 14) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Win Lose Bracket requires at least 14 expected players.",
+          path: ["expectedPlayers"],
+        });
+      }
+      if (data.expectedPlayers % 2 !== 0) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Win Lose Bracket requires an even number of expected players.",
+          path: ["expectedPlayers"],
+        });
+      }
+    }
+
     if (data.registrationMode === "owner") {
       const count = data.preRegisteredPlayerNames?.length ?? 0;
       if (count < 1) {

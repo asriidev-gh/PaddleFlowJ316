@@ -10,6 +10,12 @@ const pickleGameSchema = new Schema(
       enum: ["Beginner", "Intermediate", "Advanced", "Any Level Open Play"],
       required: true,
     },
+    queueType: {
+      type: String,
+      enum: ["normal", "winLoseBracket"],
+      required: true,
+      default: "normal",
+    },
     courtCount: { type: Number, required: true, min: 1 },
     expectedPlayers: { type: Number, required: true, min: 4 },
     strictPlayerCount: { type: Boolean, required: true, default: false },
