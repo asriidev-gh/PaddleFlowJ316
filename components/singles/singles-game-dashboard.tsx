@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ChevronDown, ChevronUp, CalendarDays, Clock, Loader2, LogOut, Trophy, UserPlus, Zap } from "lucide-react";
+import { ChevronDown, ChevronUp, CalendarDays, Clock, House, Loader2, LogOut, Trophy, UserPlus, Zap } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -91,7 +91,7 @@ import {
   canSinglesFillCourt,
   type SinglesEndGameInput,
 } from "@/lib/singles/singles-payload-mutations";
-import { swalAlertBaseOptions } from "@/lib/swal-theme";
+import { getSwalAlertBaseOptions } from "@/lib/swal-theme";
 import { toastOperationError } from "@/lib/toast-error";
 import { cn, formatPlayerDisplayName } from "@/lib/utils";
 
@@ -608,7 +608,7 @@ export function SinglesGameDashboard({ quickGameSurface }: SinglesGameDashboardP
     }
 
     const result = await Swal.fire({
-      ...swalAlertBaseOptions,
+      ...getSwalAlertBaseOptions(),
       title: "End Open Play?",
       text: "This will mark this singles session as ended.",
       icon: "warning",
@@ -633,7 +633,7 @@ export function SinglesGameDashboard({ quickGameSurface }: SinglesGameDashboardP
       entry.playerId.lastName,
     );
     const result = await Swal.fire({
-      ...swalAlertBaseOptions,
+      ...getSwalAlertBaseOptions(),
       title: "Check out?",
       html: `<strong>${playerName}</strong> will be checked out of the queue. Their registration and match history are kept.`,
       icon: "warning",
@@ -653,7 +653,7 @@ export function SinglesGameDashboard({ quickGameSurface }: SinglesGameDashboardP
       entry.playerId.lastName,
     );
     const result = await Swal.fire({
-      ...swalAlertBaseOptions,
+      ...getSwalAlertBaseOptions(),
       title: "Remove player?",
       html: `<strong>${playerName}</strong> will be removed from this session entirely (queue, court assignments, and match history).`,
       icon: "warning",
@@ -687,7 +687,7 @@ export function SinglesGameDashboard({ quickGameSurface }: SinglesGameDashboardP
   const openPlayDateLabel = game ? formatOpenPlayDate(game.openPlayDate) : null;
   const openPlayTimeLabel = game?.openPlayTimeRange?.trim() || null;
   const leaderboardHref = `/leaderboard/${gameId}`;
-  const quickGameExitHref = "/play";
+  const quickGameHomeHref = isEphemeralQuickSession ? "/play" : "/";
 
   if (sessionLoading || (isQuickGameSession && !mounted) || !payload || !game) {
     return (
@@ -995,8 +995,7 @@ export function SinglesGameDashboard({ quickGameSurface }: SinglesGameDashboardP
       <main
         className={cn(
           "game-dashboard--operator relative min-h-screen p-4 md:p-6",
-          !isPastGame &&
-            "pb-[calc(4.75rem+env(safe-area-inset-bottom))] lg:pb-6",
+          "pb-[calc(4.75rem+env(safe-area-inset-bottom))] lg:pb-6",
         )}
       >
         <section className="mx-auto flex max-w-[1600px] flex-col gap-4">
@@ -1023,7 +1022,23 @@ export function SinglesGameDashboard({ quickGameSurface }: SinglesGameDashboardP
                     buttonClassName="game-dashboard-court-view-btn h-8 gap-1 px-2 text-xs font-semibold shadow-sm sm:gap-1.5 sm:px-2.5 lg:h-11 lg:gap-2 lg:px-5 lg:text-base"
                   />
                 </div>
-              ) : null}
+              ) : (
+                <div className="game-dashboard-header-actions">
+                  <Link href={quickGameHomeHref}>
+                    <Button
+                      variant="outline"
+                      className="game-dashboard-home-btn h-8 gap-1 px-2 text-xs font-semibold shadow-sm sm:gap-1.5 sm:px-2.5 lg:h-11 lg:gap-2 lg:px-5 lg:text-base"
+                    >
+                      {isEphemeralQuickSession ? (
+                        <LogOut className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" aria-hidden />
+                      ) : (
+                        <House className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" aria-hidden />
+                      )}
+                      {isEphemeralQuickSession ? "Exit" : "Home"}
+                    </Button>
+                  </Link>
+                </div>
+              )}
               <div className="game-dashboard-header-top">
                 <div className="game-dashboard-header-main min-w-0">
                   <h1 className="page-title">{game.title}</h1>
@@ -1093,10 +1108,14 @@ export function SinglesGameDashboard({ quickGameSurface }: SinglesGameDashboardP
                     endOpenPlayPending={endOpenPlayMutation.isPending}
                     onEndOpenPlay={() => void handleEndOpenPlay()}
                   />
-                  <Link href={quickGameExitHref} className="hidden lg:contents">
+                  <Link href={quickGameHomeHref} className="hidden lg:contents">
                     <Button size="lg" variant="outline">
-                      <LogOut className="mr-2 h-4 w-4" aria-hidden />
-                      Exit
+                      {isEphemeralQuickSession ? (
+                        <LogOut className="mr-2 h-4 w-4" aria-hidden />
+                      ) : (
+                        <House className="mr-2 h-4 w-4" aria-hidden />
+                      )}
+                      {isEphemeralQuickSession ? "Exit" : "Home"}
                     </Button>
                   </Link>
                 </div>
@@ -1165,26 +1184,24 @@ export function SinglesGameDashboard({ quickGameSurface }: SinglesGameDashboardP
           ) : null}
         </section>
 
-        {!isPastGame ? (
-          <GameDashboardMobileNav
-            gameId={gameId}
-            isQuickGameSession
-            homeHref={quickGameExitHref}
-            homeLabel="Exit"
-            homeIcon="exit"
-            showQr={false}
-            qrLoading={false}
-            onQrClick={() => {}}
-            showDatabaseCheckIn={false}
-            onDatabaseCheckInClick={() => {}}
-            showEndOpenPlay
-            endOpenPlayPending={endOpenPlayMutation.isPending}
-            onEndOpenPlay={() => void handleEndOpenPlay()}
-            showResetOpenPlay={false}
-            resetOpenPlayPending={false}
-            onResetOpenPlay={() => {}}
-          />
-        ) : null}
+        <GameDashboardMobileNav
+          gameId={gameId}
+          isQuickGameSession
+          homeHref={quickGameHomeHref}
+          homeLabel={isEphemeralQuickSession ? "Exit" : "Home"}
+          homeIcon={isEphemeralQuickSession ? "exit" : "home"}
+          showQr={false}
+          qrLoading={false}
+          onQrClick={() => {}}
+          showDatabaseCheckIn={false}
+          onDatabaseCheckInClick={() => {}}
+          showEndOpenPlay={!isPastGame}
+          endOpenPlayPending={endOpenPlayMutation.isPending}
+          onEndOpenPlay={() => void handleEndOpenPlay()}
+          showResetOpenPlay={false}
+          resetOpenPlayPending={false}
+          onResetOpenPlay={() => {}}
+        />
 
         <CourtEndGameDialog
           open={endTargetCourt != null}

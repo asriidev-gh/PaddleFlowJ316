@@ -4,6 +4,7 @@ import { Suspense } from "react";
 
 import { HomeMobileNav } from "@/components/home-mobile-nav";
 import { OwnerHubNav } from "@/components/owner-hub-nav";
+import { PremiumOwnerHubGate } from "@/components/premium/premium-owner-hub-gate";
 import { OwnerRegisteredPlayersView } from "@/components/users/owner-registered-players-view";
 import { RegisteredPlayersPageIntro } from "@/components/users/registered-players-page-intro";
 
@@ -13,9 +14,11 @@ export default function RegisteredPlayersPage() {
       <section className="mx-auto flex max-w-7xl flex-col gap-6">
         <RegisteredPlayersPageIntro />
         <OwnerHubNav />
-        <Suspense fallback={null}>
-          <OwnerRegisteredPlayersView />
-        </Suspense>
+        <PremiumOwnerHubGate>
+          <Suspense fallback={null}>
+            <OwnerRegisteredPlayersView />
+          </Suspense>
+        </PremiumOwnerHubGate>
       </section>
       <HomeMobileNav />
     </main>

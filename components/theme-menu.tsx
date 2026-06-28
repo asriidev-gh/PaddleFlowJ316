@@ -1,14 +1,13 @@
 "use client";
 
 import { Check, Palette } from "lucide-react";
-import { useState } from "react";
 import { toast } from "sonner";
 
 import {
   APP_THEMES,
   applyTheme,
-  DEFAULT_THEME,
   THEME_STORAGE_KEY,
+  useAppTheme,
   type AppTheme,
 } from "@/components/theme/theme-manager";
 import { Button } from "@/components/ui/button";
@@ -28,13 +27,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 function useThemeState() {
-  const [theme, setTheme] = useState<AppTheme>(() => {
-    if (typeof window === "undefined") return DEFAULT_THEME;
-    return (localStorage.getItem(THEME_STORAGE_KEY) as AppTheme | null) ?? DEFAULT_THEME;
-  });
+  const theme = useAppTheme();
 
   const updateTheme = (nextTheme: AppTheme) => {
-    setTheme(nextTheme);
     localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
     applyTheme(nextTheme);
     toast.success(`Theme: ${APP_THEMES.find((t) => t.value === nextTheme)?.label}`);

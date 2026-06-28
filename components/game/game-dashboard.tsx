@@ -26,7 +26,7 @@ import {
 import { toastOperationError } from "@/lib/toast-error";
 import { useParams, useRouter } from "next/navigation";
 import Swal from "sweetalert2";
-import { swalAlertBaseOptions, selfQueueCheckoutMessageHtml } from "@/lib/swal-theme";
+import { getSwalAlertBaseOptions, selfQueueCheckoutMessageHtml } from "@/lib/swal-theme";
 
 import {
   applyAllCourtsPauseOptimistic,
@@ -233,8 +233,6 @@ import { SPECTATOR_VIEW_UNAVAILABLE_MESSAGE } from "@/lib/spectator-availability
 export type GameDashboardMode = "operator" | "spectator";
 
 type DashboardMobileTab = "queue" | "courts" | "history";
-
-const alertBaseOptions = swalAlertBaseOptions;
 
 const WAITING_LIST_STORAGE_KEY = "ccf-queue-waiting-visible";
 const CHECKED_OUT_LIST_STORAGE_KEY = "ccf-queue-checked-out-visible";
@@ -1664,7 +1662,7 @@ export function GameDashboard({ mode = "operator", quickGameSurface }: GameDashb
     const isSelfCheckout =
       isSpectator && selfPlayerIds.includes(queueEntryPlayerId(entry));
     const result = await Swal.fire({
-      ...alertBaseOptions,
+      ...getSwalAlertBaseOptions(),
       title: "Check out?",
       html: isSelfCheckout
         ? selfQueueCheckoutMessageHtml(playerName)
@@ -1692,7 +1690,7 @@ export function GameDashboard({ mode = "operator", quickGameSurface }: GameDashb
     );
 
     void Swal.fire({
-      ...alertBaseOptions,
+      ...getSwalAlertBaseOptions(),
       title: "Checking back in…",
       html: `<strong>${playerName}</strong> is rejoining the queue.`,
       allowOutsideClick: false,
@@ -1710,7 +1708,7 @@ export function GameDashboard({ mode = "operator", quickGameSurface }: GameDashb
       Swal.close();
       if (shouldSuppressUserNotification(error)) return;
       Swal.fire({
-        ...alertBaseOptions,
+        ...getSwalAlertBaseOptions(),
         icon: "error",
         title: "Check-in failed",
         text: getPublicErrorMessage(error, "Failed to check player back in."),
@@ -1729,7 +1727,7 @@ export function GameDashboard({ mode = "operator", quickGameSurface }: GameDashb
     );
 
     const result = await Swal.fire({
-      ...alertBaseOptions,
+      ...getSwalAlertBaseOptions(),
       title: "Remove player?",
       html: `<strong>${playerName}</strong> will be removed from this open play entirely (queue, court assignments, and match history).`,
       icon: "warning",
@@ -2200,7 +2198,7 @@ export function GameDashboard({ mode = "operator", quickGameSurface }: GameDashb
     }
 
     const result = await Swal.fire({
-      ...alertBaseOptions,
+      ...getSwalAlertBaseOptions(),
       title: "End Open Play?",
       text: "This will mark this game as ended.",
       icon: "warning",
@@ -2213,7 +2211,7 @@ export function GameDashboard({ mode = "operator", quickGameSurface }: GameDashb
 
   const handleResetGame = async () => {
     const result = await Swal.fire({
-      ...alertBaseOptions,
+      ...getSwalAlertBaseOptions(),
       title: "Reset Open Play?",
       text: "This clears matches and the leaderboard, then rebuilds the queue.",
       icon: "warning",
@@ -3180,6 +3178,16 @@ export function GameDashboard({ mode = "operator", quickGameSurface }: GameDashb
                     showLabel
                     buttonClassName="game-dashboard-court-view-btn h-8 gap-1 px-2 text-xs font-semibold shadow-sm sm:gap-1.5 sm:px-2.5 lg:h-11 lg:gap-2 lg:px-5 lg:text-base"
                   />
+                ) : !isSpectator ? (
+                  <Link href={isQuickGameSession ? quickGameHomeHref : "/"}>
+                    <Button
+                      variant="outline"
+                      className="game-dashboard-home-btn h-8 gap-1 px-2 text-xs font-semibold shadow-sm sm:gap-1.5 sm:px-2.5 lg:h-11 lg:gap-2 lg:px-5 lg:text-base"
+                    >
+                      <House className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" aria-hidden />
+                      {isQuickGameSession && isEphemeralQuickSession ? "Exit" : "Home"}
+                    </Button>
+                  </Link>
                 ) : null}
               </div>
             ) : null}

@@ -6,5 +6,5 @@ import { clearAuthSessionCookie } from "@/lib/auth";
 
 export async function logoutAccount() {
   await clearAuthSessionCookie();
-  redirect("/login?loggedOut=1");
+  redirect("/");
 }

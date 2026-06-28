@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
@@ -20,7 +20,6 @@ export default function VerifyEmailPage() {
 
 function VerifyEmailContent() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const queryClient = useQueryClient();
   const token = searchParams.get("token")?.trim() ?? "";
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
@@ -78,7 +77,7 @@ function VerifyEmailContent() {
             <p className={status === "error" ? "text-destructive" : "text-foreground"}>{message}</p>
           )}
           {status === "success" ? (
-            <Button className="w-full" onClick={() => router.replace("/")}>
+            <Button className="w-full" nativeButton={false} render={<Link href="/" />}>
               Go to dashboard
             </Button>
           ) : null}

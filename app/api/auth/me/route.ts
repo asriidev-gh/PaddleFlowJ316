@@ -25,12 +25,13 @@ export async function GET() {
       const user = await getAuthUserFromCookie();
       if (user) {
         const doc = await User.findById(user.userId)
-          .select("registrationFeature emailVerified googleId")
+          .select("registrationFeature emailVerified googleId isPremium")
           .lean();
         return NextResponse.json({
           user: {
             ...user,
             isSuperAdmin: isSuperAdmin(user.email),
+            isPremium: doc?.isPremium === true,
             registrationFeature: doc?.registrationFeature ?? "default",
             emailVerified: doc ? isUserEmailVerified(doc) : false,
           },

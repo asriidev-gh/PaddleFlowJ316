@@ -1,4 +1,4 @@
-import { clearPendingEphemeralQuickGameTransfer } from "@/lib/ephemeral-quick-game-transfer";
+import { clearPendingEphemeralQuickGameTransfer } from "@/lib/ephemeral-quick-game-transfer-pending";
 import { clearAllQuickGameSessions } from "@/lib/quick-game-store";
 
 const SESSION_STORAGE_PREFIXES = [

@@ -1,29 +1,27 @@
 "use client";
 
-import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useState, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { ThemeMenu } from "@/components/theme-menu";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { APP_NAME } from "@/lib/app-config";
-import {
-  completePendingEphemeralQuickGameTransfer,
-  readPendingEphemeralQuickGameTransfer,
-} from "@/lib/ephemeral-quick-game-transfer";
+import { readPendingEphemeralQuickGameTransfer } from "@/lib/ephemeral-quick-game-transfer-pending";
+import { SAVE_QUICK_PLAY_POST_AUTH_PATH } from "@/lib/post-auth-redirect";
+import { safeRouterPush } from "@/lib/safe-router";
 import {
   normalizeClubSlug,
   suggestClubSlugFromName,
   validateClubSlug,
 } from "@/lib/club-signup-shared";
 import { useClubLinkPrefix } from "@/hooks/use-club-link-prefix";
-import { getQuickGameDashboardPath } from "@/lib/local-game-id";
+import { useMarketingLightTheme } from "@/hooks/use-marketing-light-theme";
 import {
   WIZARD_PRIMARY_FIELD_BORDER,
   WIZARD_PRIMARY_FIELDS_SCOPE,
@@ -36,10 +34,12 @@ function SignupTabButton({
   active,
   onClick,
   children,
+  marketing = false,
 }: {
   active: boolean;
   onClick: () => void;
   children: ReactNode;
+  marketing?: boolean;
 }) {
   return (
     <button
@@ -48,9 +48,13 @@ function SignupTabButton({
       aria-selected={active}
       className={cn(
         "rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors",
-        active
-          ? "bg-primary text-primary-foreground shadow-sm"
-          : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
+        marketing
+          ? active
+            ? "bg-emerald-600 text-white shadow-sm"
+            : "text-emerald-900/75 hover:bg-emerald-50 hover:text-emerald-950"
+          : active
+            ? "bg-primary text-primary-foreground shadow-sm"
+            : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
       )}
       onClick={onClick}
     >
@@ -95,23 +99,34 @@ function SignupPasswordInput({
   );
 }
 
-export function ClubSignupPage({ defaultTab = "new" }: { defaultTab?: SignupTab }) {
-  return (
-    <Suspense fallback={null}>
-      <ClubSignupForm defaultTab={defaultTab} />
-    </Suspense>
-  );
+export function ClubSignupPage({
+  saveQuickPlay = false,
+  initialTab,
+}: {
+  saveQuickPlay?: boolean;
+  initialTab?: SignupTab;
+}) {
+  return <ClubSignupForm saveQuickPlay={saveQuickPlay} defaultTab={initialTab ?? "new"} />;
 }
 
-function ClubSignupForm({ defaultTab }: { defaultTab: SignupTab }) {
+function ClubSignupForm({
+  saveQuickPlay,
+  defaultTab,
+}: {
+  saveQuickPlay: boolean;
+  defaultTab: SignupTab;
+}) {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const searchParams = useSearchParams();
-  const saveQuickPlay = searchParams.get("saveQuickPlay") === "1";
+  useMarketingLightTheme(saveQuickPlay);
   const clubLinkPrefix = useClubLinkPrefix();
 
   const [tab, setTab] = useState<SignupTab>(defaultTab);
-  const isSignInPage = defaultTab === "existing";
+  const isSignInPage = tab === "existing";
+
+  useEffect(() => {
+    setTab(defaultTab);
+  }, [defaultTab]);
   const [loading, setLoading] = useState(false);
   const [slugTouched, setSlugTouched] = useState(false);
 
@@ -140,21 +155,26 @@ function ClubSignupForm({ defaultTab }: { defaultTab: SignupTab }) {
     void queryClient.invalidateQueries({ queryKey: ["auth-me"] });
 
     if (readPendingEphemeralQuickGameTransfer()) {
-      const newGameId = await completePendingEphemeralQuickGameTransfer(queryClient);
-      if (newGameId) {
-        toast.success("Your public session has been saved in your account.");
-        router.push(getQuickGameDashboardPath(newGameId));
-        router.refresh();
-        return;
+      try {
+        const { completePendingEphemeralQuickGameTransfer } = await import(
+          "@/lib/ephemeral-quick-game-transfer"
+        );
+        const newGameId = await completePendingEphemeralQuickGameTransfer(queryClient);
+        if (newGameId) {
+          toast.success("Your public session has been saved in your account.");
+        }
+      } catch (error) {
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : "Club created, but saving your open session failed. Try again from My Games.",
+        );
       }
     }
 
     toast.success(message);
-    const returnTo = searchParams.get("returnTo");
-    const destination =
-      returnTo && returnTo.startsWith("/") && !returnTo.startsWith("//") ? returnTo : "/";
-    router.push(destination);
-    router.refresh();
+    safeRouterPush(router, saveQuickPlay ? SAVE_QUICK_PLAY_POST_AUTH_PATH : "/");
+    void router.refresh();
   };
 
   const submitNewClub = async () => {
@@ -233,12 +253,43 @@ function ClubSignupForm({ defaultTab }: { defaultTab: SignupTab }) {
   };
 
   return (
-    <div className="signup-page flex min-h-[100dvh] flex-col bg-background">
-      <header className="border-b border-border/60 bg-background/95 py-3 backdrop-blur-sm">
-        <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-3 px-6">
-          <span className="app-brand">{APP_NAME}</span>
+    <div
+      className={cn(
+        "signup-page flex min-h-[100dvh] flex-col",
+        saveQuickPlay ? "marketing-landing signup-page--marketing" : "bg-background",
+      )}
+    >
+      <header
+        className={cn(
+          saveQuickPlay
+            ? "marketing-landing__nav"
+            : "border-b border-border/60 bg-background/95 py-3 backdrop-blur-sm",
+        )}
+      >
+        <div
+          className={cn(
+            "mx-auto flex w-full items-center justify-between gap-3",
+            saveQuickPlay ? "marketing-landing__container py-4" : "max-w-7xl px-6",
+          )}
+        >
+          <span className={saveQuickPlay ? "marketing-landing__brand" : "app-brand"}>
+            {APP_NAME}
+          </span>
           <div className="flex shrink-0 items-center gap-2">
-            <ThemeMenu />
+            {saveQuickPlay ? (
+              <a
+                href="/"
+                className={buttonVariants({
+                  variant: "ghost",
+                  size: "sm",
+                  className: "text-emerald-950 hover:bg-emerald-100/80",
+                })}
+              >
+                Back to home
+              </a>
+            ) : (
+              <ThemeMenu />
+            )}
           </div>
         </div>
       </header>
@@ -246,27 +297,52 @@ function ClubSignupForm({ defaultTab }: { defaultTab: SignupTab }) {
       <main className="flex flex-1 flex-col items-center justify-center p-6">
         <div className="relative z-10 flex w-full max-w-lg flex-col gap-5">
           <div className="text-center">
-            <h1 className="section-title text-2xl font-bold text-foreground">Set Up Your Club</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <h1
+              className={cn(
+                "text-2xl font-bold",
+                saveQuickPlay ? "marketing-landing__section-title" : "section-title text-foreground",
+              )}
+            >
+              Set Up Your Club
+            </h1>
+            <p
+              className={cn(
+                "mt-1 text-sm",
+                saveQuickPlay ? "text-emerald-900/75" : "text-muted-foreground",
+              )}
+            >
               Set up your club once — your team can sign in from any device.
             </p>
           </div>
 
           {saveQuickPlay ? (
-            <p className="rounded-xl border border-primary/30 bg-primary/10 px-4 py-3 text-center text-sm text-foreground">
+            <p className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-center text-sm text-emerald-950">
               Create or join a club to save this open play session to your account.
             </p>
           ) : null}
 
           <div
-            className="grid grid-cols-2 gap-1 rounded-xl border border-border bg-card p-1 shadow-sm"
+            className={cn(
+              "grid grid-cols-2 gap-1 rounded-xl border p-1 shadow-sm",
+              saveQuickPlay
+                ? "border-emerald-200 bg-white"
+                : "border-border bg-card",
+            )}
             role="tablist"
             aria-label="Club signup type"
           >
-            <SignupTabButton active={tab === "new"} onClick={() => setTab("new")}>
+            <SignupTabButton
+              active={tab === "new"}
+              onClick={() => setTab("new")}
+              marketing={saveQuickPlay}
+            >
               New Club
             </SignupTabButton>
-            <SignupTabButton active={tab === "existing"} onClick={() => setTab("existing")}>
+            <SignupTabButton
+              active={tab === "existing"}
+              onClick={() => setTab("existing")}
+              marketing={saveQuickPlay}
+            >
               Existing Club
             </SignupTabButton>
           </div>
@@ -318,11 +394,19 @@ function ClubSignupForm({ defaultTab }: { defaultTab: SignupTab }) {
                     </p>
                     <div
                       className={cn(
-                        "flex overflow-hidden rounded-md border bg-background focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/30",
+                        "signup-composite-field flex overflow-hidden rounded-md border focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/30",
+                        saveQuickPlay ? "bg-white" : "bg-background",
                         WIZARD_PRIMARY_FIELD_BORDER,
                       )}
                     >
-                      <span className="flex items-center whitespace-nowrap border-r border-border bg-muted/50 px-3 text-sm text-muted-foreground">
+                      <span
+                        className={cn(
+                          "signup-field-prefix flex items-center whitespace-nowrap border-r px-3 text-sm",
+                          saveQuickPlay
+                            ? "border-emerald-200 bg-emerald-50 text-emerald-900/75"
+                            : "border-border bg-muted/50 text-muted-foreground",
+                        )}
+                      >
                         {clubLinkPrefix}/
                       </span>
                       <Input
@@ -365,8 +449,12 @@ function ClubSignupForm({ defaultTab }: { defaultTab: SignupTab }) {
                     />
                   </div>
 
-                  <Button className="w-full" onClick={submitNewClub} disabled={loading}>
-                    {loading ? "Please wait..." : "Create Club"}
+                  <Button
+                    className={cn("w-full", saveQuickPlay && "bg-emerald-600 text-white hover:bg-emerald-700")}
+                    onClick={submitNewClub}
+                    disabled={loading}
+                  >
+                    {loading ? "Creating club…" : "Create Club"}
                   </Button>
                 </CardContent>
               </Card>
@@ -383,11 +471,19 @@ function ClubSignupForm({ defaultTab }: { defaultTab: SignupTab }) {
                     <Label>Club Link</Label>
                     <div
                       className={cn(
-                        "flex overflow-hidden rounded-md border bg-background focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/30",
+                        "signup-composite-field flex overflow-hidden rounded-md border focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/30",
+                        saveQuickPlay ? "bg-white" : "bg-background",
                         WIZARD_PRIMARY_FIELD_BORDER,
                       )}
                     >
-                      <span className="flex items-center whitespace-nowrap border-r border-border bg-muted/50 px-3 text-sm text-muted-foreground">
+                      <span
+                        className={cn(
+                          "signup-field-prefix flex items-center whitespace-nowrap border-r px-3 text-sm",
+                          saveQuickPlay
+                            ? "border-emerald-200 bg-emerald-50 text-emerald-900/75"
+                            : "border-border bg-muted/50 text-muted-foreground",
+                        )}
+                      >
                         {clubLinkPrefix}/
                       </span>
                       <Input
@@ -417,24 +513,28 @@ function ClubSignupForm({ defaultTab }: { defaultTab: SignupTab }) {
                   </div>
 
                   <div className="space-y-1 text-center">
-                    <Link href="/login" className="text-sm font-medium text-primary hover:underline">
+                    <a href="/login" className="text-sm font-medium text-primary hover:underline">
                       Forgot password?
-                    </Link>
+                    </a>
                     <p className="text-xs text-muted-foreground">
                       Use your recovery email on the login page to reset your password.
                     </p>
                   </div>
 
-                  <Button className="w-full" onClick={submitExistingClub} disabled={loading}>
+                  <Button
+                    className={cn("w-full", saveQuickPlay && "bg-emerald-600 text-white hover:bg-emerald-700")}
+                    onClick={submitExistingClub}
+                    disabled={loading}
+                  >
                     {loading ? "Please wait..." : isSignInPage ? "Sign In" : "Join Club"}
                   </Button>
 
                   <p className="text-center text-sm text-muted-foreground">
                     New here?{" "}
                     {isSignInPage ? (
-                      <Link href="/signup" className="font-medium text-primary hover:underline">
+                      <a href="/signup" className="font-medium text-primary hover:underline">
                         Create a club
-                      </Link>
+                      </a>
                     ) : (
                       <button
                         type="button"

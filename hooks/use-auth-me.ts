@@ -6,6 +6,7 @@ export type AuthMeUser = {
   name: string;
   email?: string;
   isSuperAdmin?: boolean;
+  isPremium?: boolean;
   emailVerified?: boolean;
 };
 

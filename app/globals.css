@@ -1669,8 +1669,8 @@
     @apply pointer-events-none absolute inset-0 bg-black/45;
   }
 
-  .login-page .glass-panel,
-  .signup-page .glass-panel {
+  html:not([data-marketing="light"]) .login-page .glass-panel,
+  html:not([data-marketing="light"]) .signup-page .glass-panel {
     @apply border-white/20 backdrop-blur-md;
     background-color: rgb(0 0 0 / 0.5) !important;
     box-shadow: 0 8px 32px rgb(0 0 0 / 0.2);
@@ -8218,4 +8218,507 @@
   border: 1px solid color-mix(in oklab, var(--border) 80%, transparent);
   background: color-mix(in oklab, var(--muted) 22%, transparent);
   padding: 0.875rem 1rem;
+}
+
+/* Public marketing home — isolated light theme (overrides neon/dark app tokens) */
+html[data-marketing="light"] {
+  color-scheme: light;
+  --background: #f6faf7;
+  --foreground: #0f3d2e;
+  --card: #ffffff;
+  --card-foreground: #0f3d2e;
+  --popover: #ffffff;
+  --popover-foreground: #0f3d2e;
+  --primary: #059669;
+  --primary-foreground: #ffffff;
+  --secondary: #ecfdf5;
+  --secondary-foreground: #0f3d2e;
+  --muted: #ecfdf5;
+  --muted-foreground: #3d6b5c;
+  --accent: #d1fae5;
+  --accent-foreground: #0f3d2e;
+  --destructive: #dc2626;
+  --border: #bbf7d0;
+  --input: #d1fae5;
+  --ring: #059669;
+}
+
+html[data-marketing="light"] body {
+  background-color: #f6faf7;
+  color: #0f3d2e;
+}
+
+html[data-marketing="light"] h1,
+html[data-marketing="light"] h2,
+html[data-marketing="light"] h3,
+html[data-marketing="light"] h4 {
+  color: #0f3d2e;
+}
+
+html[data-marketing="light"] [data-slot="dialog-overlay"] {
+  background-color: rgb(6 78 59 / 0.32);
+}
+
+html[data-marketing="light"] .developer-about-dialog--marketing {
+  border: 1px solid #bbf7d0;
+  background-color: #ffffff;
+  color: #0f3d2e;
+  box-shadow: 0 24px 48px -16px rgb(6 78 59 / 0.22);
+  --popover: #ffffff;
+  --popover-foreground: #0f3d2e;
+  --foreground: #0f3d2e;
+  --muted: #ecfdf5;
+  --muted-foreground: #3d6b5c;
+  --border: #bbf7d0;
+  --ring: #059669;
+}
+
+html[data-marketing="light"] .developer-about-dialog--marketing [data-slot="dialog-close"] .group\/button {
+  color: #3d6b5c;
+}
+
+html[data-marketing="light"] .developer-about-dialog--marketing [data-slot="dialog-close"] .group\/button:hover {
+  background-color: #ecfdf5;
+  color: #022c22;
+}
+
+/* Signup save-quick-play flow — match public marketing home */
+html[data-marketing="light"] .signup-page .glass-panel {
+  border: 1px solid #bbf7d0 !important;
+  background-color: #ffffff !important;
+  box-shadow: 0 18px 40px -20px rgb(6 78 59 / 0.15) !important;
+  backdrop-filter: none;
+  color: #0f3d2e;
+}
+
+html[data-marketing="light"] .signup-page .glass-panel [data-slot="card-title"],
+html[data-marketing="light"] .signup-page .glass-panel [data-slot="card-header"],
+html[data-marketing="light"] .signup-page .glass-panel [data-slot="card-content"],
+html[data-marketing="light"] .signup-page .section-title {
+  color: #0f3d2e;
+}
+
+html[data-marketing="light"] .signup-page .glass-panel .text-muted-foreground {
+  color: #3d6b5c !important;
+}
+
+html[data-marketing="light"] .signup-page .signup-field-prefix {
+  border-color: #bbf7d0;
+  background-color: #ecfdf5;
+  color: #3d6b5c;
+}
+
+html[data-marketing="light"] .signup-page .signup-composite-field {
+  border-color: rgb(5 150 105 / 45%);
+  background-color: #ffffff;
+}
+
+html[data-marketing="light"] .signup-page .wizard-primary-fields [data-slot="input"]:not(:disabled):not([aria-invalid="true"]),
+html[data-marketing="light"] .signup-page .wizard-primary-fields [data-slot="select-trigger"]:not(:disabled):not([aria-invalid="true"]) {
+  border-color: rgb(5 150 105 / 45%);
+  background-color: #ffffff;
+  color: #0f3d2e;
+}
+
+html[data-marketing="light"] .signup-page .wizard-primary-fields [data-slot="input"]:hover:not(:disabled),
+html[data-marketing="light"] .signup-page .wizard-primary-fields [data-slot="select-trigger"]:hover:not(:disabled) {
+  border-color: rgb(5 150 105 / 70%);
+}
+
+html[data-marketing="light"] .signup-page .wizard-primary-fields [data-slot="input"]:focus-visible,
+html[data-marketing="light"] .signup-page .wizard-primary-fields [data-slot="select-trigger"]:focus-visible {
+  border-color: #059669;
+  box-shadow: 0 0 0 3px rgb(5 150 105 / 20%);
+}
+
+html[data-marketing="light"] .signup-page .wizard-primary-fields .border-primary\/45 {
+  border-color: rgb(5 150 105 / 45%);
+}
+
+html[data-marketing="light"] .signup-page label {
+  color: #0f3d2e;
+}
+
+html[data-marketing="light"] .signup-page .text-muted-foreground {
+  color: #3d6b5c;
+}
+
+html[data-marketing="light"] .signup-page .text-primary {
+  color: #059669;
+}
+
+.marketing-landing {
+  --marketing-bg: #f6faf7;
+  --marketing-ink: #0f3d2e;
+  --marketing-muted: #3d6b5c;
+  min-height: 100dvh;
+  width: 100%;
+  position: relative;
+  isolation: isolate;
+  pointer-events: auto;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgb(167 243 208 / 0.45), transparent),
+    var(--marketing-bg);
+  color: var(--marketing-ink);
+}
+
+.marketing-landing__container {
+  width: 100%;
+  max-width: 72rem;
+  margin-inline: auto;
+  padding-inline: 1.5rem;
+}
+
+.marketing-landing__nav {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  border-bottom: 1px solid rgb(167 243 208 / 0.6);
+  background: rgb(246 250 247 / 0.92);
+  backdrop-filter: blur(12px);
+}
+
+.marketing-landing__brand {
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #022c22;
+}
+
+.marketing-landing__hero {
+  padding-block: 3rem;
+}
+
+@media (min-width: 768px) {
+  .marketing-landing__hero {
+    padding-block: 4rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .marketing-landing__hero {
+    padding-block: 5rem;
+  }
+}
+
+.marketing-landing__eyebrow {
+  display: inline-flex;
+  border-radius: 9999px;
+  border: 1px solid #a7f3d0;
+  background: #ffffff;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #047857;
+}
+
+.marketing-landing__headline {
+  font-size: clamp(1.875rem, 4vw, 3rem);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  color: #022c22;
+}
+
+.marketing-landing__lead {
+  max-width: 36rem;
+  font-size: 1rem;
+  line-height: 1.65;
+  color: rgb(6 78 59 / 0.82);
+}
+
+@media (min-width: 640px) {
+  .marketing-landing__lead {
+    font-size: 1.125rem;
+  }
+}
+
+.marketing-landing__section {
+  padding-block: 3.5rem;
+}
+
+@media (min-width: 768px) {
+  .marketing-landing__section {
+    padding-block: 5rem;
+  }
+}
+
+.marketing-landing__section--muted {
+  background: linear-gradient(180deg, rgb(236 253 245 / 0.65), rgb(246 250 247 / 0.2));
+}
+
+.marketing-landing__section--accent {
+  background: linear-gradient(135deg, #047857, #059669 45%, #10b981);
+  color: #ecfdf5;
+}
+
+.marketing-landing__section--accent h2,
+.marketing-landing__section--accent p,
+.marketing-landing__section--accent blockquote {
+  color: #ecfdf5;
+}
+
+.marketing-landing__section-title {
+  font-size: clamp(1.5rem, 3vw, 1.875rem);
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  color: #022c22;
+}
+
+.marketing-landing__section-lead {
+  margin-top: 0.75rem;
+  font-size: 1rem;
+  line-height: 1.65;
+  color: rgb(6 78 59 / 0.78);
+}
+
+.marketing-landing__card {
+  border-radius: 1rem;
+  border: 1px solid #d1fae5;
+  background: #ffffff;
+  padding: 1.5rem;
+  box-shadow: 0 1px 2px rgb(6 78 59 / 0.06);
+}
+
+.marketing-landing__card h3 {
+  color: #022c22;
+}
+
+.marketing-landing__card li,
+.marketing-landing__card p {
+  color: rgb(6 78 59 / 0.86);
+}
+
+.marketing-landing__footer {
+  border-top: 1px solid rgb(167 243 208 / 0.7);
+  background: rgb(255 255 255 / 0.72);
+  color: rgb(6 78 59 / 0.72);
+}
+
+.marketing-landing .group\/button {
+  font-weight: 600;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.marketing-live-stats {
+  border-block: 1px solid #bbf7d0;
+  background: linear-gradient(180deg, #ffffff, #f0fdf4);
+  padding-block: 2rem;
+}
+
+.marketing-live-stats__banner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  text-align: center;
+}
+
+.marketing-live-stats__live {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  margin: 0;
+  font-size: 0.9375rem;
+  color: #047857;
+}
+
+.marketing-live-stats__live strong {
+  font-weight: 700;
+  color: #022c22;
+}
+
+.marketing-live-stats__pulse {
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: 9999px;
+  background: #22c55e;
+  box-shadow: 0 0 0 0 rgb(34 197 94 / 0.55);
+  animation: marketing-live-pulse 2s ease-in-out infinite;
+}
+
+@keyframes marketing-live-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgb(34 197 94 / 0.45);
+  }
+
+  50% {
+    box-shadow: 0 0 0 6px rgb(34 197 94 / 0);
+  }
+}
+
+.marketing-live-stats__tagline {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgb(6 78 59 / 0.65);
+}
+
+.marketing-live-stats__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 1.75rem;
+}
+
+@media (max-width: 639px) {
+  .marketing-live-stats__grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+}
+
+.marketing-live-stats__item {
+  border-radius: 0.875rem;
+  border: 1px solid #d1fae5;
+  background: #ffffff;
+  padding: 1.25rem 1rem;
+  text-align: center;
+}
+
+.marketing-live-stats__value {
+  margin: 0;
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  color: #022c22;
+  font-variant-numeric: tabular-nums;
+}
+
+.marketing-live-stats__label {
+  margin: 0.375rem 0 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: rgb(6 78 59 / 0.72);
+}
+
+.marketing-devices {
+  position: relative;
+  min-height: 280px;
+  padding: 1rem 0 2rem;
+}
+
+.marketing-devices__laptop {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 520px);
+  margin-inline: auto;
+}
+
+.marketing-devices__laptop-lid {
+  border-radius: 14px 14px 0 0;
+  border: 2px solid #1e293b;
+  background: #0f172a;
+  padding: 10px 10px 0;
+  box-shadow: 0 24px 48px -12px rgb(15 61 46 / 0.35);
+}
+
+.marketing-devices__laptop-camera {
+  width: 6px;
+  height: 6px;
+  margin: 0 auto 8px;
+  border-radius: 999px;
+  background: #334155;
+}
+
+.marketing-devices__laptop-screen {
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  border-radius: 4px 4px 0 0;
+  background: #ecfdf5;
+}
+
+.marketing-devices__laptop-base {
+  height: 14px;
+  margin: 0 8%;
+  border-radius: 0 0 12px 12px;
+  background: linear-gradient(180deg, #cbd5e1, #94a3b8);
+}
+
+.marketing-devices__phone {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  width: 118px;
+  padding: 8px 6px 10px;
+  border-radius: 22px;
+  border: 2px solid #1e293b;
+  background: #0f172a;
+  box-shadow: 0 20px 40px -16px rgb(15 61 46 / 0.45);
+}
+
+@media (min-width: 640px) {
+  .marketing-devices__phone {
+    width: 140px;
+    right: 4%;
+  }
+}
+
+.marketing-devices__phone-notch {
+  width: 42px;
+  height: 5px;
+  margin: 0 auto 6px;
+  border-radius: 999px;
+  background: #1e293b;
+}
+
+.marketing-devices__phone-screen {
+  aspect-ratio: 9 / 19;
+  overflow: hidden;
+  border-radius: 14px;
+  background: #ecfdf5;
+}
+
+.marketing-devices__phone-home {
+  width: 36px;
+  height: 4px;
+  margin: 8px auto 0;
+  border-radius: 999px;
+  background: #334155;
+}
+
+/* SweetAlert2 — follow active app theme tokens on <html data-theme> */
+.swal-themed-popup {
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-lg, 0.5rem) !important;
+  box-shadow: 0 18px 40px -20px color-mix(in oklch, var(--foreground) 35%, transparent) !important;
+  font-family: var(--font-sans) !important;
+}
+
+.swal-themed-popup .swal2-title {
+  color: var(--foreground) !important;
+}
+
+.swal-themed-popup .swal2-html-container,
+.swal-themed-popup .swal2-content {
+  color: var(--muted-foreground) !important;
+}
+
+.swal-themed-popup .swal2-styled.swal2-confirm {
+  color: var(--primary-foreground) !important;
+  border-radius: var(--radius-md, 0.375rem) !important;
+}
+
+.swal-themed-popup .swal2-styled.swal2-cancel {
+  color: var(--primary-foreground) !important;
+  border-radius: var(--radius-md, 0.375rem) !important;
+}
+
+.swal-themed-popup .swal2-icon.swal2-question {
+  border-color: color-mix(in oklch, var(--primary) 55%, transparent) !important;
+  color: var(--primary) !important;
+}
+
+.swal-themed-popup .swal2-icon.swal2-warning {
+  border-color: color-mix(in oklch, var(--destructive) 55%, transparent) !important;
+  color: var(--destructive) !important;
 }

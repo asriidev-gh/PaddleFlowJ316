@@ -48,6 +48,7 @@ const userSchema = new Schema(
     lastLoginAt: { type: Date },
     lastLoginDevice: { type: String, trim: true },
     isBlocked: { type: Boolean, default: false },
+    isPremium: { type: Boolean, default: false },
     emailVerified: { type: Boolean, default: false },
     emailVerificationTokenHash: { type: String, select: false },
     emailVerificationExpiresAt: { type: Date, select: false },

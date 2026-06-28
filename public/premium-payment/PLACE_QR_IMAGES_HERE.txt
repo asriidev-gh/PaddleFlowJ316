@@ -1,0 +1,11 @@
+Place your payment QR images here:
+
+- gcash-maya-qr.png — GCash or Maya scan-to-pay QR
+- bdo-qr.png — BDO bank transfer QR
+- bpi-qr.png — BPI bank transfer QR
+
+Alternatively set these environment variables:
+
+- NEXT_PUBLIC_PREMIUM_PAYMENT_GCASH_MAYA_QR_URL
+- NEXT_PUBLIC_PREMIUM_PAYMENT_BDO_QR_URL
+- NEXT_PUBLIC_PREMIUM_PAYMENT_BPI_QR_URL

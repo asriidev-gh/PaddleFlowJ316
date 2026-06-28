@@ -4,6 +4,7 @@ import { HomeMobileNav } from "@/components/home-mobile-nav";
 import { MyClubPageIntro } from "@/components/my-club/my-club-page-intro";
 import { MyClubView } from "@/components/my-club/my-club-view";
 import { OwnerHubNav } from "@/components/owner-hub-nav";
+import { PremiumOwnerHubGate } from "@/components/premium/premium-owner-hub-gate";
 
 export default function MyClubPage() {
   return (
@@ -11,7 +12,9 @@ export default function MyClubPage() {
       <section className="mx-auto flex max-w-7xl flex-col gap-6">
         <MyClubPageIntro />
         <OwnerHubNav />
-        <MyClubView />
+        <PremiumOwnerHubGate>
+          <MyClubView />
+        </PremiumOwnerHubGate>
       </section>
       <HomeMobileNav />
     </main>

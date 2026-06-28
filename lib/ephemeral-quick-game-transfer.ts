@@ -5,6 +5,12 @@ import { toast } from "sonner";
 import { applyEndOpenPlayOptimistic } from "@/lib/game-payload-mutations";
 import { savedQuickGamesQueryKey } from "@/hooks/use-saved-quick-games";
 import {
+  clearPendingEphemeralQuickGameTransfer,
+  readPendingEphemeralQuickGameTransfer,
+  stashPendingEphemeralQuickGameTransfer,
+  type PendingEphemeralQuickGameTransfer,
+} from "@/lib/ephemeral-quick-game-transfer-pending";
+import {
   createAccountQuickGameId,
   getQuickGameDashboardPath,
   isEphemeralQuickGame,
@@ -20,38 +26,16 @@ import {
   readQuickGamePayload,
   removeQuickGameSession,
 } from "@/lib/quick-game-store";
-import { swalAlertBaseOptions } from "@/lib/swal-theme";
+import { getSwalAlertBaseOptions } from "@/lib/swal-theme";
 
-const PENDING_TRANSFER_KEY = "ccfpickleball:pending-ephemeral-quick-game-transfer";
-
-export type PendingEphemeralQuickGameTransfer = {
-  sourceGameId: string;
-  payload: OperatorFullPayload;
-  endAfterSave: boolean;
-};
+export type { PendingEphemeralQuickGameTransfer } from "@/lib/ephemeral-quick-game-transfer-pending";
+export {
+  clearPendingEphemeralQuickGameTransfer,
+  readPendingEphemeralQuickGameTransfer,
+  stashPendingEphemeralQuickGameTransfer,
+} from "@/lib/ephemeral-quick-game-transfer-pending";
 
 export type EphemeralSaveChoice = "save" | "decline" | "dismiss";
-
-export function stashPendingEphemeralQuickGameTransfer(transfer: PendingEphemeralQuickGameTransfer) {
-  if (typeof sessionStorage === "undefined") return;
-  sessionStorage.setItem(PENDING_TRANSFER_KEY, JSON.stringify(transfer));
-}
-
-export function readPendingEphemeralQuickGameTransfer(): PendingEphemeralQuickGameTransfer | null {
-  if (typeof sessionStorage === "undefined") return null;
-  const raw = sessionStorage.getItem(PENDING_TRANSFER_KEY);
-  if (!raw) return null;
-  try {
-    return JSON.parse(raw) as PendingEphemeralQuickGameTransfer;
-  } catch {
-    return null;
-  }
-}
-
-export function clearPendingEphemeralQuickGameTransfer() {
-  if (typeof sessionStorage === "undefined") return;
-  sessionStorage.removeItem(PENDING_TRANSFER_KEY);
-}
 
 export function remapEphemeralPayloadToAccount(
   payload: OperatorFullPayload,
@@ -70,7 +54,7 @@ export function remapEphemeralPayloadToAccount(
 
 export async function promptSaveEphemeralQuickGame(): Promise<EphemeralSaveChoice> {
   const result = await Swal.fire({
-    ...swalAlertBaseOptions,
+    ...getSwalAlertBaseOptions(),
     title: "Save open session?",
     text: "You want to save this open session to your account before ending.",
     icon: "question",
@@ -103,10 +87,12 @@ async function persistEphemeralPayloadAsAccountGame(
   const saveStatus: "active" | "ended" =
     next.game.status === "ended" ? "ended" : "active";
 
+  const saveReason = options.endAfterSave ? "end" : "checkpoint";
+
   await saveQuickGameSession(
     newGameId,
     next,
-    options.endAfterSave ? "end" : "create",
+    saveReason,
     saveStatus,
   );
   void queryClient.invalidateQueries({ queryKey: savedQuickGamesQueryKey() });

@@ -1,23 +1,40 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
+import { authCookieClearOptions, getAuthCookieName } from "@/lib/auth-cookie";
+import { tryVerifyAuthToken } from "@/lib/auth-token";
 import { isQuickGame } from "@/lib/local-game-id";
-
-const AUTH_COOKIE = "ccf_auth";
 
 function leaderboardGameId(pathname: string) {
   return pathname.match(/^\/leaderboard\/([^/]+)/)?.[1] ?? null;
 }
 
+function clearAuthCookie(response: NextResponse) {
+  response.cookies.set(getAuthCookieName(), "", authCookieClearOptions());
+  return response;
+}
+
+function withStaleAuthCookieCleared(
+  response: NextResponse,
+  authCookie: string | undefined,
+  hasValidAuth: boolean,
+) {
+  if (authCookie && !hasValidAuth) {
+    clearAuthCookie(response);
+  }
+  return response;
+}
+
 export function proxy(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl;
+  const authCookie = request.cookies.get(getAuthCookieName())?.value;
+  const hasValidAuth = tryVerifyAuthToken(authCookie);
   const isSpectatorGameRoute = /^\/games\/[^/]+\/spectate(?:\/.*)?$/.test(pathname);
   const isSpectatorLeaderboard =
     pathname.startsWith("/leaderboard/") && searchParams.get("from") === "spectator";
   const isQuickGameLeaderboard = isQuickGame(leaderboardGameId(pathname));
   const isProtectedRoute =
-    (pathname === "/" ||
-      pathname.startsWith("/games") ||
+    (pathname.startsWith("/games") ||
       pathname.startsWith("/leaderboard") ||
       pathname.startsWith("/insights") ||
       pathname.startsWith("/error-logs") ||
@@ -30,24 +47,16 @@ export function proxy(request: NextRequest) {
     !isSpectatorGameRoute &&
     !isSpectatorLeaderboard &&
     !isQuickGameLeaderboard;
-  const isAuthRoute =
-    pathname.startsWith("/login") ||
-    pathname.startsWith("/signup") ||
-    pathname.startsWith("/signin");
-  const hasAuth = Boolean(request.cookies.get(AUTH_COOKIE)?.value);
 
-  if (isProtectedRoute && !hasAuth) {
-    return NextResponse.redirect(new URL("/login", request.url));
+  if (isProtectedRoute && !hasValidAuth) {
+    return withStaleAuthCookieCleared(
+      NextResponse.redirect(new URL("/login", request.url)),
+      authCookie,
+      hasValidAuth,
+    );
   }
 
-  if (isAuthRoute && hasAuth) {
-    if (pathname.startsWith("/login") && searchParams.get("loggedOut") === "1") {
-      return NextResponse.next();
-    }
-    return NextResponse.redirect(new URL("/", request.url));
-  }
-
-  return NextResponse.next();
+  return withStaleAuthCookieCleared(NextResponse.next(), authCookie, hasValidAuth);
 }
 
 export const config = {
@@ -68,5 +77,7 @@ export const config = {
     "/signup",
     "/signin",
     "/quick-game",
+    "/play",
+    "/play/:path*",
   ],
 };

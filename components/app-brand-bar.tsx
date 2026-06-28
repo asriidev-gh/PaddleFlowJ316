@@ -10,6 +10,7 @@ import { PlayerSessionMenu } from "@/components/player/player-session-menu";
 import { ThemeMenu } from "@/components/theme-menu";
 import { UserHeaderGreeting } from "@/components/user-header-greeting";
 import { UserMenu } from "@/components/user-menu";
+import { useAuthMe } from "@/hooks/use-auth-me";
 import { useGameClubBranding } from "@/hooks/use-game-club-branding";
 import {
   getSpectatorMenuGameId,
@@ -22,6 +23,7 @@ import {
   isPublicAppPath,
   isSpectatorPath,
   shouldHideAppBrandBar,
+  shouldHideAppBrandBarForGuest,
   shouldShowDashboardHeaderLink,
   shouldShowUserHeaderGreeting,
 } from "@/lib/app-shell";
@@ -125,6 +127,7 @@ export function AppBrandBar() {
   const searchParams = useSearchParams();
   const fromParam = searchParams.get("from");
   const returnGameParam = searchParams.get("returnGame");
+  const { data: authData, isPending: isAuthPending } = useAuthMe();
   const clubBranding = useGameClubBranding(pathname, fromParam);
   const { pad, container } = getBrandShellClasses(pathname);
   const showThemeOnly = isPublicAppPath(pathname, fromParam);
@@ -132,7 +135,14 @@ export function AppBrandBar() {
   const clubProfileGameId = getSpectatorViewedGameId(pathname, fromParam);
   const [clubProfileOpen, setClubProfileOpen] = useState(false);
 
-  if (shouldHideAppBrandBar(pathname)) {
+  if (
+    pathname === "/" &&
+    (isAuthPending || !authData?.user)
+  ) {
+    return null;
+  }
+
+  if (shouldHideAppBrandBar(pathname) || shouldHideAppBrandBarForGuest(pathname, Boolean(authData?.user))) {
     return null;
   }
 

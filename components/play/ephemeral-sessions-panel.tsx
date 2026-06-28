@@ -18,7 +18,7 @@ import { applyEndOpenPlayOptimistic } from "@/lib/game-payload-mutations";
 import { getQuickGameDashboardPath } from "@/lib/local-game-id";
 import { writeOperatorGamePayload } from "@/lib/operator-game-cache";
 import { readQuickGamePayload, writeQuickGamePayload } from "@/lib/quick-game-store";
-import { swalAlertBaseOptions } from "@/lib/swal-theme";
+import { getSwalAlertBaseOptions } from "@/lib/swal-theme";
 import { cn } from "@/lib/utils";
 
 export function EphemeralSessionsPanel({ className }: { className?: string }) {
@@ -62,7 +62,7 @@ export function EphemeralSessionsPanel({ className }: { className?: string }) {
     }
 
     const result = await Swal.fire({
-      ...swalAlertBaseOptions,
+      ...getSwalAlertBaseOptions(),
       title: "End Open Play?",
       text: "This will mark this game as ended.",
       icon: "warning",

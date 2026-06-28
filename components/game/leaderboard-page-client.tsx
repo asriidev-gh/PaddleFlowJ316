@@ -99,7 +99,7 @@ export function LeaderboardPageClient({
         ? "/play"
         : isQuickGameSession || hasDashboardLease
           ? getQuickGameDashboardPath(gameId)
-          : "/my-games";
+          : "/";
 
   const backLabel = isGameHistoryLeaderboard
     ? "Go back to home"

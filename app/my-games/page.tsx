@@ -7,10 +7,13 @@ import { useEmailVerified } from "@/components/home/email-verification-banner";
 import { MyGamesPageIntro } from "@/components/home/my-games-page-intro";
 import { MyGamesView } from "@/components/home/my-games-view";
 import { OwnerHubNav } from "@/components/owner-hub-nav";
+import { useAuthMe } from "@/hooks/use-auth-me";
+import { canUseLiveQueueing } from "@/lib/premium-access";
 import { useUiStore } from "@/store/ui-store";
 
 export default function MyGamesPage() {
   const setCreateGameWizardOpen = useUiStore((state) => state.setCreateGameWizardOpen);
+  const { data: authData } = useAuthMe();
   const { emailVerified, isLoading: emailVerifiedLoading } = useEmailVerified();
 
   const openCreateGameWizard = () => {
@@ -18,7 +21,13 @@ export default function MyGamesPage() {
       toast.error("Verify your email before creating a game.");
       return;
     }
-    setCreateGameWizardOpen(true);
+
+    if (canUseLiveQueueing(authData?.user)) {
+      setCreateGameWizardOpen(true, { liveQueue: true, registrationMode: "self" });
+      return;
+    }
+
+    setCreateGameWizardOpen(true, { liveQueue: false, registrationMode: "owner" });
   };
 
   return (

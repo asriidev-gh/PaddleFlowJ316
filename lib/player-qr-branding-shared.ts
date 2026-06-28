@@ -1,4 +1,6 @@
-export const DEFAULT_QR_BRAND_NAME = "PaddleFlowJ316";
+import { APP_NAME_COMPACT } from "@/lib/app-config";
+
+export const DEFAULT_QR_BRAND_NAME = APP_NAME_COMPACT;
 export const MAX_PLAYER_QR_TITLE_LENGTH = 20;
 
 export type PlayerQrBranding = {

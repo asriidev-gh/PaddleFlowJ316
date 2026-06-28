@@ -72,6 +72,9 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${appSans.variable} ${geistMono.variable} ${roboto.variable} ${outfit.variable} ${bebasNeue.variable} ${oswald.variable} h-full`}
     >
+      <head>
+        <script src="/theme-init.js" />
+      </head>
       <body
         suppressHydrationWarning
         className="min-h-full flex flex-col bg-background font-sans text-foreground antialiased"

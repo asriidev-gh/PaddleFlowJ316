@@ -1,11 +1,15 @@
 import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
 
+import {
+  AUTH_COOKIE_NAME,
+  authCookieClearOptions,
+} from "@/lib/auth-cookie";
 import { runWithDatabase } from "@/lib/db";
 import { isUserBlocked } from "@/lib/user-block";
 import { User } from "@/models/User";
 
-const AUTH_COOKIE = "ccf_auth";
+const AUTH_COOKIE = AUTH_COOKIE_NAME;
 
 export type AuthPayload = {
   userId: string;
@@ -55,23 +59,11 @@ export async function getAuthUserFromCookie() {
   }
 }
 
-export function getAuthCookieName() {
-  return AUTH_COOKIE;
-}
-
-export function authCookieClearOptions() {
-  return {
-    httpOnly: true,
-    sameSite: "lax" as const,
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: 0,
-  };
-}
+export { authCookieClearOptions, getAuthCookieName } from "@/lib/auth-cookie";
 
 export async function clearAuthSessionCookie() {
   const cookieStore = await cookies();
-  cookieStore.set(getAuthCookieName(), "", authCookieClearOptions());
+  cookieStore.set(AUTH_COOKIE, "", authCookieClearOptions());
 }
 
 const IMPERSONATE_PURPOSE = "impersonate";

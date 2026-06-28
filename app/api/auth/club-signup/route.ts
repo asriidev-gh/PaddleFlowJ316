@@ -8,7 +8,11 @@ import { sendAccountWelcomeVerificationEmail } from "@/lib/account-welcome-email
 import { REGISTRATION_FEATURE_QR_ID } from "@/lib/registration-feature";
 import { USER_TYPE_DEFAULT } from "@/lib/registration-variant";
 import { getRegistrationDevice } from "@/lib/user-auth-audit";
-import { issueEmailVerificationForUser } from "@/lib/user-email-verification";
+import {
+  generateEmailVerificationToken,
+  hashEmailVerificationToken,
+  EMAIL_VERIFICATION_TOKEN_EXPIRY_MS,
+} from "@/lib/user-email-verification";
 import { User } from "@/models/User";
 
 export async function POST(request: Request) {
@@ -40,17 +44,22 @@ export async function POST(request: Request) {
         );
       }
 
-      const emailExists = await User.findOne({ email });
+      const [emailExists, slugExists] = await Promise.all([
+        User.findOne({ email }),
+        User.findOne({ clubSlug }),
+      ]);
       if (emailExists) {
         return NextResponse.json({ message: "That recovery email is already registered." }, { status: 400 });
       }
 
-      const slugExists = await User.findOne({ clubSlug });
       if (slugExists) {
         return NextResponse.json({ message: "That club link is already taken." }, { status: 400 });
       }
 
       const passwordHash = await bcrypt.hash(password, 10);
+      const verificationToken = generateEmailVerificationToken();
+      const verificationTokenHash = hashEmailVerificationToken(verificationToken);
+      const verificationExpiresAt = new Date(Date.now() + EMAIL_VERIFICATION_TOKEN_EXPIRY_MS);
       const device = getRegistrationDevice(request);
       const now = new Date();
       const user = await User.create({
@@ -65,9 +74,10 @@ export async function POST(request: Request) {
         lastLoginAt: now,
         lastLoginDevice: device,
         emailVerified: false,
+        emailVerificationTokenHash: verificationTokenHash,
+        emailVerificationExpiresAt: verificationExpiresAt,
       });
 
-      const { token: verificationToken } = await issueEmailVerificationForUser(user._id.toString());
       void sendAccountWelcomeVerificationEmail({
         to: email,
         name: clubName,

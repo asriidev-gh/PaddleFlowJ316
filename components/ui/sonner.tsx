@@ -1,11 +1,32 @@
 "use client"
 
-import { useTheme } from "next-themes"
+import { useEffect, useState } from "react"
 import { Toaster as Sonner, type ToasterProps } from "sonner"
 import { CircleCheckIcon, InfoIcon, TriangleAlertIcon, OctagonXIcon, Loader2Icon } from "lucide-react"
 
+function useSonnerTheme(): ToasterProps["theme"] {
+  const [theme, setTheme] = useState<ToasterProps["theme"]>("dark")
+
+  useEffect(() => {
+    const sync = () => {
+      setTheme(
+        document.documentElement.getAttribute("data-marketing") === "light" ? "light" : "dark",
+      )
+    }
+    sync()
+    const observer = new MutationObserver(sync)
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-marketing"],
+    })
+    return () => observer.disconnect()
+  }, [])
+
+  return theme
+}
+
 const Toaster = ({ ...props }: ToasterProps) => {
-  const { theme = "system" } = useTheme()
+  const theme = useSonnerTheme()
 
   return (
     <Sonner

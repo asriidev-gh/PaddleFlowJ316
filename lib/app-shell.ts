@@ -20,7 +20,7 @@ export function getBrandShellClasses(pathname: string) {
     };
   }
 
-  if (pathname === "/" || pathname === "/my-games" || pathname.startsWith("/my-games/") || pathname === "/my-club" || pathname === "/marketplace" || pathname === "/play" || pathname.startsWith("/play/") || pathname === "/quick-game") {
+  if (pathname === "/" || pathname === "/my-games" || pathname.startsWith("/my-games/") || pathname === "/my-club" || pathname === "/marketplace" || pathname === "/premium" || pathname === "/play" || pathname.startsWith("/play/") || pathname === "/quick-game") {
     return {
       pad: "px-6 lg:px-10",
       container: "max-w-7xl",
@@ -44,6 +44,17 @@ export function shouldHideAppBrandBar(pathname: string) {
   return pathname.startsWith("/login") || pathname.startsWith("/signup") || pathname.startsWith("/signin");
 }
 
+/** Marketing landing ships its own footer. */
+export function shouldHideAppFooter(pathname: string, isAuthenticated = true) {
+  if (pathname.startsWith("/login") || pathname.startsWith("/signup")) return true;
+  return pathname === "/" && !isAuthenticated;
+}
+
+/** Guest marketing home uses its own header. */
+export function shouldHideAppBrandBarForGuest(pathname: string, isAuthenticated: boolean) {
+  return pathname === "/" && !isAuthenticated;
+}
+
 /** Public pages: theme picker only (no account / logout). */
 export function isPublicAppPath(pathname: string, fromParam: string | null) {
   if (isSpectatorPath(pathname, fromParam)) return true;
@@ -53,7 +64,7 @@ export function isPublicAppPath(pathname: string, fromParam: string | null) {
   return false;
 }
 
-const OWNER_HUB_PATHS = new Set(["/my-games", "/users", "/my-club", "/marketplace"]);
+const OWNER_HUB_PATHS = new Set(["/my-games", "/users", "/my-club", "/marketplace", "/premium"]);
 
 function isOwnerHubPath(pathname: string) {
   return OWNER_HUB_PATHS.has(pathname) || pathname.startsWith("/my-games/");

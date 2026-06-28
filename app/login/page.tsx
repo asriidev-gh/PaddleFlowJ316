@@ -15,16 +15,17 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { readPendingEphemeralQuickGameTransfer } from "@/lib/ephemeral-quick-game-transfer-pending";
 import {
-  completePendingEphemeralQuickGameTransfer,
-  readPendingEphemeralQuickGameTransfer,
-} from "@/lib/ephemeral-quick-game-transfer";
-import { getQuickGameDashboardPath } from "@/lib/local-game-id";
+  isSaveQuickPlaySearchParam,
+  resolvePostAuthDestination,
+} from "@/lib/post-auth-redirect";
 import {
   WIZARD_OUTLINE_BUTTON_BORDER,
   WIZARD_PRIMARY_FIELD_BORDER,
   WIZARD_PRIMARY_FIELDS_SCOPE,
 } from "@/lib/wizard-field-styles";
+import { safeRouterPush, safeRouterReplace } from "@/lib/safe-router";
 import { cn } from "@/lib/utils";
 
 export default function LoginPage() {
@@ -55,7 +56,7 @@ function LoginForm() {
     const error = searchParams.get("error");
     if (error) {
       toast.error(error);
-      router.replace("/login");
+      safeRouterReplace(router, "/login");
     }
   }, [searchParams, router]);
 
@@ -69,7 +70,7 @@ function LoginForm() {
   useEffect(() => {
     if (searchParams.get("loggedOut") !== "1") return;
     queryClient.setQueryData(["auth-me"], { user: null });
-    router.replace("/login");
+    safeRouterReplace(router, "/login");
   }, [queryClient, router, searchParams]);
 
   const submit = async () => {
@@ -86,10 +87,16 @@ function LoginForm() {
       void queryClient.invalidateQueries({ queryKey: ["auth-me"] });
 
       if (readPendingEphemeralQuickGameTransfer()) {
+        const { completePendingEphemeralQuickGameTransfer } = await import(
+          "@/lib/ephemeral-quick-game-transfer"
+        );
         const newGameId = await completePendingEphemeralQuickGameTransfer(queryClient);
         if (newGameId) {
           toast.success("Your public session has been saved in your account.");
-          router.push(getQuickGameDashboardPath(newGameId));
+          const destination = resolvePostAuthDestination({
+            saveQuickPlay: isSaveQuickPlaySearchParam(searchParams),
+          });
+          safeRouterPush(router, destination);
           router.refresh();
           return;
         }
@@ -97,10 +104,13 @@ function LoginForm() {
 
       toast.success(mode === "login" ? "Welcome back!" : "Account created. Check your email to verify your account.");
 
-      const returnTo = searchParams.get("returnTo");
-      const destination =
-        returnTo && returnTo.startsWith("/") && !returnTo.startsWith("//") ? returnTo : "/";
-      router.push(destination);
+      safeRouterPush(
+        router,
+        resolvePostAuthDestination({
+          saveQuickPlay: isSaveQuickPlaySearchParam(searchParams),
+          returnTo: searchParams.get("returnTo"),
+        }),
+      );
       router.refresh();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Authentication failed.");
@@ -132,109 +142,109 @@ function LoginForm() {
       <main className="login-page relative isolate z-10 flex min-h-[100dvh] flex-col items-center justify-center overflow-hidden p-6">
         {!introDone && !skipIntro ? <LoginVideoIntro onComplete={handleIntroComplete} /> : null}
 
-      <div
-        className={cn(
-          "relative z-10 flex w-full max-w-md flex-col items-center gap-6 transition-all duration-700 ease-out",
-          introDone
-            ? "-translate-y-[60px] opacity-100"
-            : "pointer-events-none translate-y-4 opacity-0",
-        )}
-        aria-hidden={!introDone}
-      >
-        <Card className="glass-panel w-full max-w-md">
-          <CardHeader className="text-center">
-            <CardTitle className="section-title">
-              {mode === "login" ? "Login" : "Create Account"}
-            </CardTitle>
-            {searchParams.get("saveQuickPlay") === "1" ? (
-              <p className="text-sm text-muted-foreground">
-                Sign up to save your open play session to your account.
-              </p>
-            ) : null}
-          </CardHeader>
-          <CardContent className={cn("space-y-4", WIZARD_PRIMARY_FIELDS_SCOPE)}>
-            {mode === "register" ? (
+        <div
+          className={cn(
+            "relative z-10 flex w-full max-w-md flex-col items-center gap-6 transition-all duration-700 ease-out",
+            introDone
+              ? "-translate-y-[60px] opacity-100"
+              : "pointer-events-none translate-y-4 opacity-0",
+          )}
+          aria-hidden={!introDone}
+        >
+          <Card className="glass-panel w-full max-w-md">
+            <CardHeader className="text-center">
+              <CardTitle className="section-title">
+                {mode === "login" ? "Login" : "Create Account"}
+              </CardTitle>
+              {searchParams.get("saveQuickPlay") === "1" ? (
+                <p className="text-sm text-muted-foreground">
+                  Sign up to save your open play session to your account.
+                </p>
+              ) : null}
+            </CardHeader>
+            <CardContent className={cn("space-y-4", WIZARD_PRIMARY_FIELDS_SCOPE)}>
+              {mode === "register" ? (
+                <div className="space-y-2">
+                  <Label>Name</Label>
+                  <Input
+                    className={cn("h-11 text-base", WIZARD_PRIMARY_FIELD_BORDER)}
+                    value={form.name}
+                    onChange={(event) => setForm({ ...form, name: event.target.value })}
+                  />
+                </div>
+              ) : null}
               <div className="space-y-2">
-                <Label>Name</Label>
+                <Label>Email</Label>
                 <Input
+                  type="email"
                   className={cn("h-11 text-base", WIZARD_PRIMARY_FIELD_BORDER)}
-                  value={form.name}
-                  onChange={(event) => setForm({ ...form, name: event.target.value })}
+                  value={form.email}
+                  onChange={(event) => setForm({ ...form, email: event.target.value })}
                 />
               </div>
-            ) : null}
-            <div className="space-y-2">
-              <Label>Email</Label>
-              <Input
-                type="email"
-                className={cn("h-11 text-base", WIZARD_PRIMARY_FIELD_BORDER)}
-                value={form.email}
-                onChange={(event) => setForm({ ...form, email: event.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Password</Label>
-              <div className="relative">
-                <Input
-                  type={showPassword ? "text" : "password"}
-                  value={form.password}
-                  onChange={(event) => setForm({ ...form, password: event.target.value })}
-                  className={cn("h-11 pr-9 text-base", WIZARD_PRIMARY_FIELD_BORDER)}
-                  autoComplete={mode === "login" ? "current-password" : "new-password"}
-                />
-                <button
-                  type="button"
-                  className="absolute top-1/2 right-1 z-10 flex size-7 -translate-y-1/2 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
-                  onMouseDown={(event) => event.preventDefault()}
-                  onClick={() => setShowPassword((prev) => !prev)}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4" aria-hidden />
-                  ) : (
-                    <Eye className="h-4 w-4" aria-hidden />
-                  )}
-                </button>
+              <div className="space-y-2">
+                <Label>Password</Label>
+                <div className="relative">
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    value={form.password}
+                    onChange={(event) => setForm({ ...form, password: event.target.value })}
+                    className={cn("h-11 pr-9 text-base", WIZARD_PRIMARY_FIELD_BORDER)}
+                    autoComplete={mode === "login" ? "current-password" : "new-password"}
+                  />
+                  <button
+                    type="button"
+                    className="absolute top-1/2 right-1 z-10 flex size-7 -translate-y-1/2 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+                    onMouseDown={(event) => event.preventDefault()}
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" aria-hidden />
+                    ) : (
+                      <Eye className="h-4 w-4" aria-hidden />
+                    )}
+                  </button>
+                </div>
               </div>
-            </div>
-            <Button className="w-full" onClick={submit} disabled={loading || !introDone}>
-              {loading ? "Please wait..." : mode === "login" ? "Login" : "Create Account"}
-            </Button>
+              <Button className="w-full" onClick={submit} disabled={loading || !introDone}>
+                {loading ? "Please wait..." : mode === "login" ? "Login" : "Create Account"}
+              </Button>
 
-            <div className="flex items-center gap-3">
-              <span className="h-px flex-1 bg-border" />
-              <span className="text-xs text-muted-foreground">or</span>
-              <span className="h-px flex-1 bg-border" />
-            </div>
+              <div className="flex items-center gap-3">
+                <span className="h-px flex-1 bg-border" />
+                <span className="text-xs text-muted-foreground">or</span>
+                <span className="h-px flex-1 bg-border" />
+              </div>
 
-            <Button
-              type="button"
-              variant="outline"
-              className={cn("w-full", WIZARD_OUTLINE_BUTTON_BORDER)}
-              disabled={loading || !introDone}
-              onClick={() => {
-                window.location.href = "/api/auth/google";
-              }}
-            >
-              <GoogleIcon />
-              Continue with Google
-            </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className={cn("w-full", WIZARD_OUTLINE_BUTTON_BORDER)}
+                disabled={loading || !introDone}
+                onClick={() => {
+                  window.location.href = "/api/auth/google";
+                }}
+              >
+                <GoogleIcon />
+                Continue with Google
+              </Button>
 
-            <Button
-              variant="ghost"
-              className="w-full"
-              disabled={!introDone}
-              onClick={() => setMode((prev) => (prev === "login" ? "register" : "login"))}
-            >
-              {mode === "login" ? "Need an account? Sign up" : "Already have an account? Log in"}
-            </Button>
-          </CardContent>
-        </Card>
-        <p className="text-center text-xs text-muted-foreground">
-          <DeveloperCreditLink />
-        </p>
-      </div>
-    </main>
+              <Button
+                variant="ghost"
+                className="w-full"
+                disabled={!introDone}
+                onClick={() => setMode((prev) => (prev === "login" ? "register" : "login"))}
+              >
+                {mode === "login" ? "Need an account? Sign up" : "Already have an account? Log in"}
+              </Button>
+            </CardContent>
+          </Card>
+          <p className="text-center text-xs text-muted-foreground">
+            <DeveloperCreditLink />
+          </p>
+        </div>
+      </main>
     </>
   );
 }

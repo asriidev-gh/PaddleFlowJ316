@@ -4,6 +4,7 @@ import { HomeMobileNav } from "@/components/home-mobile-nav";
 import { MarketplaceListingsView } from "@/components/marketplace/marketplace-listings-view";
 import { MarketplacePageIntro } from "@/components/marketplace/marketplace-page-intro";
 import { OwnerHubNav } from "@/components/owner-hub-nav";
+import { PremiumOwnerHubGate } from "@/components/premium/premium-owner-hub-gate";
 
 export default function MarketplacePage() {
   return (
@@ -11,7 +12,9 @@ export default function MarketplacePage() {
       <section className="mx-auto flex max-w-7xl flex-col gap-6">
         <MarketplacePageIntro />
         <OwnerHubNav />
-        <MarketplaceListingsView />
+        <PremiumOwnerHubGate>
+          <MarketplaceListingsView />
+        </PremiumOwnerHubGate>
       </section>
       <HomeMobileNav />
     </main>

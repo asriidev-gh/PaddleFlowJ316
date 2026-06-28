@@ -37,6 +37,7 @@ import {
   useEmailVerified,
 } from "@/components/home/email-verification-banner";
 import { LiveQueueOffBadge } from "@/components/home/live-queue-off-badge";
+import { PremiumBadge } from "@/components/home/premium-badge";
 import { SwitchToCourtViewButton } from "@/components/game/switch-to-court-view-button";
 import { DemoVideoDialog } from "@/components/demo-video-dialog";
 import { EditGameDialog, type EditGameDialogGame } from "@/components/game/edit-game-dialog";
@@ -94,7 +95,7 @@ import {
 } from "@/lib/quick-game-persistence-client";
 import { removeQuickGameSession } from "@/lib/quick-game-store";
 import { useSavedQuickGames, savedQuickGamesQueryKey } from "@/hooks/use-saved-quick-games";
-import { useQuickGameFeatureEnabled } from "@/hooks/use-system-features";
+import { canUseLiveQueueing } from "@/lib/premium-access";
 import { useLocalGameStore } from "@/store/local-game-store";
 import { cn } from "@/lib/utils";
 
@@ -942,10 +943,9 @@ export function MyGamesView() {
   const [editingQuickGame, setEditingQuickGame] = useState<GameCard | null>(null);
   const [listView, setListView] = useState<GameListViewMode>("list");
   const [viewReady, setViewReady] = useState(false);
-  const [gamesTab, setGamesTab] = useState<"active" | "past" | "quick">("active");
+  const [gamesTab, setGamesTab] = useState<"active" | "past" | "quick">("quick");
   const [showEndedQuickGames, setShowEndedQuickGames] = useState(false);
   const [demoDialogOpen, setDemoDialogOpen] = useState(false);
-  const { enabled: quickGameFeatureEnabled } = useQuickGameFeatureEnabled();
 
   useEffect(() => {
     const mq = window.matchMedia(GAME_LIST_DESKTOP_MEDIA);
@@ -975,6 +975,8 @@ export function MyGamesView() {
   const { data, isLoading } = useGamesList();
   const { data: authData } = useAuthMe();
   const isSuperAdmin = Boolean(authData?.user?.isSuperAdmin);
+  const liveQueueingEnabled = canUseLiveQueueing(authData?.user);
+  const showLiveQueueGames = liveQueueingEnabled;
   const { emailVerified, isLoading: emailVerifiedLoading } = useEmailVerified();
   const [authUiReady, setAuthUiReady] = useState(false);
 
@@ -1002,23 +1004,28 @@ export function MyGamesView() {
   const userType = data?.userType;
 
   useEffect(() => {
-    if (!data?.games) return;
+    if (!showLiveQueueGames || !data?.games) return;
     for (const game of data.games.filter((item) => item.status !== "ended")) {
       prefetchOperatorDashboard(queryClient, game.gameId);
     }
-  }, [data?.games, queryClient]);
+  }, [data?.games, queryClient, showLiveQueueGames]);
 
   const quickGames = useMemo(
     () => mergeQuickGameListCards(listLocalGameCards(localSessionsRecord), savedQuickGames),
     [localSessionsRecord, savedQuickGames],
   );
-  const showQuickGamesTab = quickGames.length > 0;
 
   useEffect(() => {
-    if (!showQuickGamesTab && gamesTab === "quick") {
+    if (!showLiveQueueGames && (gamesTab === "active" || gamesTab === "past")) {
+      setGamesTab("quick");
+    }
+  }, [gamesTab, showLiveQueueGames]);
+
+  useEffect(() => {
+    if (showLiveQueueGames && gamesTab === "quick" && quickGames.length === 0) {
       setGamesTab("active");
     }
-  }, [gamesTab, showQuickGamesTab]);
+  }, [gamesTab, quickGames.length, showLiveQueueGames]);
 
   useEffect(() => {
     for (const game of quickGames.filter((item) => item.status !== "ended")) {
@@ -1073,7 +1080,7 @@ export function MyGamesView() {
     onSuccess: (payload) => {
       toast.success(payload.message ?? "Open play reactivated.");
       void queryClient.invalidateQueries({ queryKey: ["games"] });
-      setGamesTab("active");
+      setGamesTab(showLiveQueueGames ? "active" : "quick");
     },
     onError: (error) => {
       toast.error(error instanceof Error ? error.message : "Failed to reactivate open play.");
@@ -1198,7 +1205,7 @@ export function MyGamesView() {
     setDemoDialogOpen(true);
   };
 
-  const games = data?.games ?? [];
+  const games = showLiveQueueGames ? (data?.games ?? []) : [];
   const activeGames = games.filter((game) => game.status !== "ended");
   const pastGames = games.filter((game) => game.status === "ended");
   const activeQuickGames = quickGames.filter((game) => game.status !== "ended");
@@ -1207,7 +1214,8 @@ export function MyGamesView() {
     !showEndedQuickGames && quickGames.length > 0 && activeQuickGames.length === 0
       ? "No active quick games. Turn on Show Ended to see completed sessions."
       : "No quick games yet. Create one with live queuing off in the game wizard.";
-  const showCourtsView = activeGames.length + activeQuickGames.length >= 2;
+  const showCourtsView =
+    showLiveQueueGames && activeGames.length + activeQuickGames.length >= 2;
 
   useEffect(() => {
     if (showCourtsView) {
@@ -1245,27 +1253,43 @@ export function MyGamesView() {
                     </Button>
                   }
                 />
-                <DropdownMenuContent align="end" className="w-64">
+                <DropdownMenuContent align="end" className="w-72">
                   <DropdownMenuItem
-                    onClick={() => openCreateGameWizard({ liveQueue: true, registrationMode: "self" })}
+                    onClick={() =>
+                      openCreateGameWizard({ liveQueue: false, registrationMode: "owner" })
+                    }
+                  >
+                    <Gauge />
+                    <span className="flex min-w-0 flex-wrap items-center gap-2">
+                      Quick Game
+                      <LiveQueueOffBadge className="px-1.5 text-[0.5625rem] font-medium normal-case" />
+                    </span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    disabled={!liveQueueingEnabled}
+                    onClick={() => {
+                      if (!liveQueueingEnabled) return;
+                      openCreateGameWizard({ liveQueue: true, registrationMode: "self" });
+                    }}
                   >
                     <Plus />
-                    Live Queuing Game
-                  </DropdownMenuItem>
-                  {quickGameFeatureEnabled ? (
-                    <DropdownMenuItem
-                      onClick={() =>
-                        openCreateGameWizard({ liveQueue: false, registrationMode: "owner" })
-                      }
-                    >
-                      <Gauge />
-                      <span className="flex min-w-0 flex-wrap items-center gap-2">
-                        Quick Game
-                        <LiveQueueOffBadge className="px-1.5 text-[0.5625rem] font-medium normal-case" />
+                    <span className="flex min-w-0 flex-col items-start gap-0.5 text-left">
+                      <span className="flex flex-wrap items-center gap-2">
+                        Live Queueing Game
+                        {!liveQueueingEnabled ? (
+                          <PremiumBadge className="px-1.5 text-[0.5625rem] font-medium normal-case" />
+                        ) : null}
                       </span>
-                    </DropdownMenuItem>
-                  ) : null}
-                  {showDemoCreateOption ? (
+                      {!liveQueueingEnabled ? (
+                        <span className="text-xs font-normal text-muted-foreground">
+                          <Link href="/premium" className="text-primary underline-offset-2 hover:underline">
+                            Available on premium plans.
+                          </Link>
+                        </span>
+                      ) : null}
+                    </span>
+                  </DropdownMenuItem>
+                  {isSuperAdmin && showDemoCreateOption ? (
                     <DropdownMenuItem onClick={openDemoDialog}>
                       <FlaskConical />
                       Demo game
@@ -1279,30 +1303,32 @@ export function MyGamesView() {
         <CardContent>
           <Tabs value={gamesTab} onValueChange={handleGamesTabChange} className="gap-4">
               <TabsList>
-                <TabsTrigger value="active">
-                  Active Games
-                  {activeGames.length > 0 ? (
-                    <Badge variant="secondary" className="ml-1.5 px-1.5 py-0 text-xs">
-                      {activeGames.length}
-                    </Badge>
-                  ) : null}
-                </TabsTrigger>
-                <TabsTrigger value="past">
-                  Past Games
-                  {pastGames.length > 0 ? (
-                    <Badge variant="secondary" className="ml-1.5 px-1.5 py-0 text-xs">
-                      {pastGames.length}
-                    </Badge>
-                  ) : null}
-                </TabsTrigger>
-                {showQuickGamesTab ? (
+                {showLiveQueueGames ? (
+                  <>
+                    <TabsTrigger value="active">
+                      Active Games
+                      {activeGames.length > 0 ? (
+                        <Badge variant="secondary" className="ml-1.5 px-1.5 py-0 text-xs">
+                          {activeGames.length}
+                        </Badge>
+                      ) : null}
+                    </TabsTrigger>
+                    <TabsTrigger value="past">
+                      Past Games
+                      {pastGames.length > 0 ? (
+                        <Badge variant="secondary" className="ml-1.5 px-1.5 py-0 text-xs">
+                          {pastGames.length}
+                        </Badge>
+                      ) : null}
+                    </TabsTrigger>
+                  </>
+                ) : null}
                 <TabsTrigger value="quick">
                   Quick Games (live queuing off)
                   <Badge variant="secondary" className="ml-1.5 px-1.5 py-0 text-xs">
                     {quickGames.length}
                   </Badge>
                 </TabsTrigger>
-                ) : null}
               </TabsList>
               {gamesTab === "quick" ? (
                 <label className="flex w-fit cursor-pointer items-center gap-2.5">
@@ -1313,6 +1339,7 @@ export function MyGamesView() {
                   <span className="text-sm text-muted-foreground">Show Ended</span>
                 </label>
               ) : null}
+              {showLiveQueueGames ? (
               <TabsContent value="active">
                 {isLoading ? (
                   <div className="flex items-center justify-center py-16 text-muted-foreground">
@@ -1333,6 +1360,8 @@ export function MyGamesView() {
                   />
                 )}
               </TabsContent>
+              ) : null}
+              {showLiveQueueGames ? (
               <TabsContent value="past">
                 {isLoading ? (
                   <div className="flex items-center justify-center py-16 text-muted-foreground">
@@ -1356,7 +1385,7 @@ export function MyGamesView() {
                   />
                 )}
               </TabsContent>
-              {showQuickGamesTab ? (
+              ) : null}
               <TabsContent value="quick">
                 <GameList
                   key={`quick-${listViewForTab}`}
@@ -1370,7 +1399,6 @@ export function MyGamesView() {
                   userType={userType}
                 />
               </TabsContent>
-              ) : null}
             </Tabs>
         </CardContent>
       </Card>
