@@ -8378,11 +8378,91 @@ html[data-marketing="light"] .signup-page .text-primary {
   backdrop-filter: blur(12px);
 }
 
-.marketing-landing__brand {
-  font-size: 1.125rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: #022c22;
+.marketing-landing__nav-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-block: 0.625rem;
+}
+
+@media (min-width: 640px) {
+  .marketing-landing__nav-inner {
+    padding-block: 0.75rem;
+  }
+}
+
+.marketing-landing__nav .marketing-landing__brand-logo {
+  height: 3.25rem;
+  max-width: min(15rem, 58vw);
+}
+
+.marketing-landing__brand-link {
+  display: inline-flex;
+  flex-shrink: 0;
+  border-radius: 0.375rem;
+  outline-offset: 2px;
+  transition: opacity 150ms ease;
+}
+
+.marketing-landing__brand-link:hover {
+  opacity: 0.88;
+}
+
+.marketing-landing__brand-link:focus-visible {
+  outline: 2px solid rgb(5 150 105 / 0.55);
+}
+
+@media (min-width: 640px) {
+  .marketing-landing__nav .marketing-landing__brand-logo {
+    height: 3.75rem;
+    max-width: 17.5rem;
+  }
+}
+
+.marketing-landing__nav-actions {
+  flex-shrink: 0;
+}
+
+.marketing-landing__nav-cta {
+  height: 2.5rem;
+  padding-inline: 1rem;
+  font-size: 0.875rem;
+}
+
+@media (min-width: 640px) {
+  .marketing-landing__nav-cta {
+    height: 2.75rem;
+    padding-inline: 1.125rem;
+  }
+}
+
+.marketing-landing__brand-logo {
+  display: block;
+  height: 4rem;
+  width: auto;
+  max-width: min(17rem, 62vw);
+  object-fit: contain;
+  object-position: left center;
+}
+
+@media (min-width: 640px) {
+  .marketing-landing__brand-logo {
+    height: 5.25rem;
+    max-width: 20rem;
+  }
+}
+
+.signup-page__brand-logo {
+  height: 3.25rem;
+  max-width: 14rem;
+}
+
+@media (min-width: 640px) {
+  .signup-page__brand-logo {
+    height: 3.75rem;
+    max-width: 16rem;
+  }
 }
 
 .marketing-landing__hero {

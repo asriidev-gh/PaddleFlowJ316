@@ -269,20 +269,35 @@ function ClubSignupForm({
         <div
           className={cn(
             "mx-auto flex w-full items-center justify-between gap-3",
-            saveQuickPlay ? "marketing-landing__container py-4" : "max-w-7xl px-6",
+            saveQuickPlay
+              ? "marketing-landing__container marketing-landing__nav-inner"
+              : "max-w-7xl px-6 py-3",
           )}
         >
-          <span className={saveQuickPlay ? "marketing-landing__brand" : "app-brand"}>
-            {APP_NAME}
-          </span>
-          <div className="flex shrink-0 items-center gap-2">
+          {saveQuickPlay ? (
+            <a href="/" className="marketing-landing__brand-link" aria-label={`Back to ${APP_NAME} home`}>
+              <img
+                src="/assets/images/paddlestacks_logo.png"
+                alt={APP_NAME}
+                className="marketing-landing__brand-logo"
+              />
+            </a>
+          ) : (
+            <img
+              src="/assets/images/paddlestacks_logo.png"
+              alt={APP_NAME}
+              className={cn("marketing-landing__brand-logo", "signup-page__brand-logo")}
+            />
+          )}
+          <div className="marketing-landing__nav-actions flex shrink-0 items-center gap-2">
             {saveQuickPlay ? (
               <a
                 href="/"
                 className={buttonVariants({
                   variant: "ghost",
-                  size: "sm",
-                  className: "text-emerald-950 hover:bg-emerald-100/80",
+                  size: "default",
+                  className:
+                    "marketing-landing__nav-cta text-emerald-950 hover:bg-emerald-100/80",
                 })}
               >
                 Back to home

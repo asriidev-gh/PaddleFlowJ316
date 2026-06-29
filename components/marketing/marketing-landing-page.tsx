@@ -74,18 +74,30 @@ export function MarketingLandingPage() {
       <MarketingLandingTheme />
       <div className="marketing-landing">
         <header className="marketing-landing__nav relative z-20">
-          <div className="marketing-landing__container flex items-center justify-between gap-4 py-4">
-            <span className="marketing-landing__brand">{APP_NAME}</span>
-            <nav className="relative z-20 flex items-center gap-2 sm:gap-3">
+          <div className="marketing-landing__container marketing-landing__nav-inner">
+            <img
+              src="/assets/images/paddlestacks_logo.png"
+              alt={APP_NAME}
+              className="marketing-landing__brand-logo"
+            />
+            <nav className="marketing-landing__nav-actions relative z-20 flex items-center gap-2 sm:gap-3">
               <a
                 href="/signup?saveQuickPlay=1&tab=existing"
-                className={marketingLinkClass("ghost", "sm", "text-emerald-950 hover:bg-emerald-100/80")}
+                className={marketingLinkClass(
+                  "ghost",
+                  "default",
+                  "marketing-landing__nav-cta text-emerald-950 hover:bg-emerald-100/80",
+                )}
               >
                 Sign in
               </a>
               <a
                 href="/signup?saveQuickPlay=1"
-                className={marketingLinkClass("default", "sm", "bg-emerald-600 text-white hover:bg-emerald-700")}
+                className={marketingLinkClass(
+                  "default",
+                  "default",
+                  "marketing-landing__nav-cta bg-emerald-600 text-white hover:bg-emerald-700",
+                )}
               >
                 Get started
               </a>
