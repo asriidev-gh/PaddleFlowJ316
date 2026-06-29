@@ -274,6 +274,7 @@ export async function connectToDatabase(
   dbNameOverride?: string,
 ): Promise<typeof mongoose> {
   if (cached.dbWorkDepth > 0) {
+    await ensureDatabaseReady(dbNameOverride);
     return mongoose;
   }
 
