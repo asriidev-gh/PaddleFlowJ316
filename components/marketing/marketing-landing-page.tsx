@@ -65,8 +65,11 @@ const FEATURES = [
   },
 ];
 
-const marketingLinkClass = (variant: "ghost" | "default" | "outline", size: "sm" | "lg", extra?: string) =>
-  cn(buttonVariants({ variant, size }), "font-semibold", extra);
+const marketingLinkClass = (
+  variant: "ghost" | "default" | "outline",
+  size: "sm" | "default" | "lg",
+  extra?: string,
+) => cn(buttonVariants({ variant, size }), "font-semibold", extra);
 
 export function MarketingLandingPage() {
   return (
