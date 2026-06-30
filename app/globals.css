@@ -796,6 +796,22 @@
     @apply bg-background;
   }
 
+  .app-brand__logo-image {
+    display: block;
+    height: 2.25rem;
+    width: auto;
+    max-width: min(12rem, 52vw);
+    object-fit: contain;
+    object-position: left center;
+  }
+
+  @media (min-width: 768px) {
+    .app-brand__logo-image {
+      height: 2.5rem;
+      max-width: 14rem;
+    }
+  }
+
   .page-title {
     @apply font-heading text-2xl font-semibold tracking-tight md:text-3xl;
     line-height: 1.25;

@@ -3209,8 +3209,8 @@ export function GameDashboard({ mode = "operator", quickGameSurface }: GameDashb
                 ) : null}
                 {isEphemeralQuickSession ? (
                   <p className="caption mt-1 text-muted-foreground">
-                    Public quick play — this session lives only in this browser. Nothing is saved to
-                    our servers.
+                    Public quick play — this session lives only in this browser. We may record
+                    anonymous usage stats; player names and game data are not saved to our servers.
                   </p>
                 ) : isAccountQuickSession ? (
                   <p className="caption mt-1 text-muted-foreground">

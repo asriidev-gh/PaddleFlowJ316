@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { CLIENT_ERROR_REPORT_KINDS } from "@/lib/client-error-reporting-shared";
+import { resolveClientIp } from "@/lib/client-ip";
 import { formatZodError } from "@/lib/format-zod-error";
 import { ingestClientErrorReport } from "@/lib/report-client-error";
 
@@ -14,10 +15,9 @@ const clientErrorReportSchema = z.object({
   userAgent: z.string().max(500).optional(),
 });
 
+
 function resolveClientKey(request: Request) {
-  const forwarded = request.headers.get("x-forwarded-for");
-  if (forwarded) return forwarded.split(",")[0]?.trim() || "unknown";
-  return request.headers.get("x-real-ip")?.trim() || "unknown";
+  return resolveClientIp(request);
 }
 
 export async function POST(request: Request) {

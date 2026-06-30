@@ -5,6 +5,7 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
 import { DashboardHeaderLink } from "@/components/dashboard-header-link";
+import { AppLogo } from "@/components/app-logo";
 import { SpectateClubProfileDialog } from "@/components/player/spectate-club-profile-dialog";
 import { PlayerSessionMenu } from "@/components/player/player-session-menu";
 import { ThemeMenu } from "@/components/theme-menu";
@@ -21,6 +22,7 @@ import {
   getBrandShellClasses,
   isGameDashboardPath,
   isPublicAppPath,
+  isQuickPlayPath,
   isSpectatorPath,
   shouldHideAppBrandBar,
   shouldHideAppBrandBarForGuest,
@@ -66,8 +68,10 @@ function BrandTitle({
   );
   const label = useClubBrand ? (
     <ClubBrandLabel branding={clubBranding} />
-  ) : (
+  ) : isQuickPlayPath(pathname) ? (
     APP_NAME
+  ) : (
+    <AppLogo />
   );
 
   if (isSpectatorPath(pathname, fromParam)) {

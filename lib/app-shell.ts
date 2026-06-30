@@ -55,12 +55,16 @@ export function shouldHideAppBrandBarForGuest(pathname: string, isAuthenticated:
   return pathname === "/" && !isAuthenticated;
 }
 
+export function isQuickPlayPath(pathname: string) {
+  return pathname === "/play" || pathname.startsWith("/play/");
+}
+
 /** Public pages: theme picker only (no account / logout). */
 export function isPublicAppPath(pathname: string, fromParam: string | null) {
   if (isSpectatorPath(pathname, fromParam)) return true;
   if (pathname.startsWith("/register")) return true;
   if (pathname.startsWith("/signup") || pathname.startsWith("/signin")) return true;
-  if (pathname === "/play" || pathname.startsWith("/play/")) return true;
+  if (isQuickPlayPath(pathname)) return true;
   return false;
 }
 

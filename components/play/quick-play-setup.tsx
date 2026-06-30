@@ -39,6 +39,7 @@ import {
 import {
   replaceEphemeralQuickGameSession,
 } from "@/lib/quick-game-store";
+import { trackEphemeralQuickPlayUsage } from "@/lib/track-ephemeral-quick-play-usage";
 import {
   DEFAULT_PLAYER_OPEN_PLAY_LEVEL,
   MAX_QUICK_PLAY_PLAYERS,
@@ -59,7 +60,7 @@ import { WIZARD_OUTLINE_BUTTON_BORDER, WIZARD_PRIMARY_FIELDS_SCOPE } from "@/lib
 import { cn } from "@/lib/utils";
 
 const BROWSER_ONLY_PREVIEW_NOTE =
-  "This session stays in this browser only. Sign in from My Games if you want sessions saved to your account.";
+  "This session stays in this browser only. Anonymous usage stats may be recorded; player names and game data are not saved to our servers.";
 
 function createInitialForm(): QuickPlayWizardFormFields {
   return {
@@ -275,6 +276,14 @@ export function QuickPlaySetup() {
       replaceEphemeralQuickGameSession(gameId, session);
       router.push(dashboardPath);
       queueMicrotask(() => {
+        trackEphemeralQuickPlayUsage({
+          gameId,
+          gameMode: form.gameMode,
+          courtCount: form.courtCount,
+          playerCount: playersForSubmit.length,
+          openPlayType: form.openPlayType,
+          matchingType: form.matchingType,
+        });
         seedLocalGameOperatorCache(queryClient, gameId);
         const playerCount = playersForSubmit.length;
         toast.success(
@@ -299,8 +308,8 @@ export function QuickPlaySetup() {
       <div className="space-y-3">
         <QuickPlayWizardHeader step={step} />
         <p className="text-sm text-muted-foreground">
-          Run open play in your browser — no account required. Nothing is saved to our servers; data
-          disappears when you close this browser tab.
+          Run open play in your browser — no account required. Your session stays in this browser only;
+          we record anonymous usage stats (not player names or game data) to improve the product.
         </p>
       </div>
 
