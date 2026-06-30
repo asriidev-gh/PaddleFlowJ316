@@ -2,7 +2,7 @@ import { isCloudinaryConfigured } from "@/lib/cloudinary";
 import {
   formatPremiumPaymentMethod,
   formatPremiumUpgradeRequestStatus,
-  isPremiumPaymentMethod,
+  isPremiumActivePaymentMethod,
   MAX_PREMIUM_UPGRADE_NOTE_LENGTH,
   PREMIUM_ANNUAL_PRICE_PHP,
   type PremiumPaymentMethod,
@@ -73,7 +73,7 @@ export async function createPremiumUpgradeRequest(
     proofFile: File;
   },
 ) {
-  if (!isPremiumPaymentMethod(input.paymentMethod)) {
+  if (!isPremiumActivePaymentMethod(input.paymentMethod)) {
     throw new Error("Choose a valid payment method.");
   }
 

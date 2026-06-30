@@ -3,6 +3,9 @@ export const PREMIUM_ANNUAL_PRICE_PHP = 1999;
 export const PREMIUM_PAYMENT_METHODS = ["gcash_maya", "bdo", "bpi"] as const;
 export type PremiumPaymentMethod = (typeof PREMIUM_PAYMENT_METHODS)[number];
 
+/** Payment options shown in the upgrade flow (BDO/BPI can be re-enabled later). */
+export const PREMIUM_ACTIVE_PAYMENT_METHODS = ["gcash_maya"] as const satisfies readonly PremiumPaymentMethod[];
+
 export const PREMIUM_UPGRADE_REQUEST_STATUSES = ["pending", "approved", "rejected"] as const;
 export type PremiumUpgradeRequestStatus = (typeof PREMIUM_UPGRADE_REQUEST_STATUSES)[number];
 
@@ -19,7 +22,7 @@ export function formatPremiumAnnualPrice() {
 export function formatPremiumPaymentMethod(method: PremiumPaymentMethod) {
   switch (method) {
     case "gcash_maya":
-      return "GCash / Maya";
+      return "GCash";
     case "bdo":
       return "BDO (bank transfer)";
     case "bpi":
@@ -29,6 +32,10 @@ export function formatPremiumPaymentMethod(method: PremiumPaymentMethod) {
 
 export function isPremiumPaymentMethod(value: string): value is PremiumPaymentMethod {
   return (PREMIUM_PAYMENT_METHODS as readonly string[]).includes(value);
+}
+
+export function isPremiumActivePaymentMethod(value: string): value is PremiumPaymentMethod {
+  return (PREMIUM_ACTIVE_PAYMENT_METHODS as readonly string[]).includes(value);
 }
 
 export function formatPremiumUpgradeRequestStatus(status: PremiumUpgradeRequestStatus) {

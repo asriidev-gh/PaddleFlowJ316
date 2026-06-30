@@ -146,7 +146,7 @@ export function PremiumPageContent() {
               <p className="text-sm font-medium text-foreground">How to upgrade</p>
               <ol className="list-decimal space-y-2 pl-5 text-sm text-muted-foreground">
                 <li>Tap <span className="font-medium text-foreground">Request premium access</span> above.</li>
-                <li>Pay {annualPrice} via GCash/Maya or BDO/BPI using the QR code shown.</li>
+                <li>Pay {annualPrice} via GCash using the QR code shown.</li>
                 <li>Upload your proof of payment — we&apos;ll validate it and activate Premium on your account.</li>
               </ol>
               <Button className="gap-2" onClick={() => setUpgradeDialogOpen(true)}>

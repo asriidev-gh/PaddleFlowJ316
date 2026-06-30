@@ -203,30 +203,39 @@ export function PremiumUpgradeRequestDialog({ open, onOpenChange }: PremiumUpgra
             </div>
 
             <div className="space-y-2">
-              <Label>Payment method</Label>
-              <div className="grid gap-2">
-                {config.methods.map((method) => {
-                  const selected = paymentMethod === method.id;
-                  return (
-                    <button
-                      key={method.id}
-                      type="button"
-                      onClick={() => setPaymentMethod(method.id)}
-                      className={cn(
-                        "rounded-xl border px-3 py-2.5 text-left text-sm transition-colors",
-                        selected
-                          ? "border-amber-500/50 bg-amber-500/10"
-                          : "border-border/70 bg-background hover:bg-muted/20",
-                      )}
-                    >
-                      <span className="font-medium text-foreground">{method.label}</span>
-                      <span className="mt-0.5 block text-xs text-muted-foreground">
-                        {method.instructions}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
+              {config.methods.length > 1 ? (
+                <>
+                  <Label>Payment method</Label>
+                  <div className="grid gap-2">
+                    {config.methods.map((method) => {
+                      const selected = paymentMethod === method.id;
+                      return (
+                        <button
+                          key={method.id}
+                          type="button"
+                          onClick={() => setPaymentMethod(method.id)}
+                          className={cn(
+                            "rounded-xl border px-3 py-2.5 text-left text-sm transition-colors",
+                            selected
+                              ? "border-amber-500/50 bg-amber-500/10"
+                              : "border-border/70 bg-background hover:bg-muted/20",
+                          )}
+                        >
+                          <span className="font-medium text-foreground">{method.label}</span>
+                          <span className="mt-0.5 block text-xs text-muted-foreground">
+                            {method.instructions}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </>
+              ) : selectedMethod ? (
+                <div className="rounded-xl border border-border/70 bg-muted/15 px-3 py-2.5 text-sm">
+                  <p className="font-medium text-foreground">{selectedMethod.label}</p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">{selectedMethod.instructions}</p>
+                </div>
+              ) : null}
             </div>
 
             {selectedMethod?.qrUrl ? (

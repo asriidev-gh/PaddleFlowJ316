@@ -1,11 +1,15 @@
-Place your payment QR images here:
+Premium annual plan payment QR (active):
 
-- gcash-maya-qr.png — GCash or Maya scan-to-pay QR
-- bdo-qr.png — BDO bank transfer QR
-- bpi-qr.png — BPI bank transfer QR
+- public/assets/images/gcash_account.jpg — GCash scan-to-pay QR (default)
 
-Alternatively set these environment variables:
+Override with environment variable:
 
 - NEXT_PUBLIC_PREMIUM_PAYMENT_GCASH_MAYA_QR_URL
+
+BDO and BPI are disabled for now. To re-enable later, add images here and update
+PREMIUM_ACTIVE_PAYMENT_METHODS in lib/premium-payment-shared.ts:
+
+- bdo-qr.png — BDO bank transfer QR
+- bpi-qr.png — BPI bank transfer QR
 - NEXT_PUBLIC_PREMIUM_PAYMENT_BDO_QR_URL
 - NEXT_PUBLIC_PREMIUM_PAYMENT_BPI_QR_URL

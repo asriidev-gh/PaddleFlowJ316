@@ -1,8 +1,8 @@
 import {
   formatPremiumAnnualPrice,
   formatPremiumPaymentMethod,
+  PREMIUM_ACTIVE_PAYMENT_METHODS,
   PREMIUM_ANNUAL_PRICE_PHP,
-  PREMIUM_PAYMENT_METHODS,
   type PremiumPaymentMethod,
 } from "@/lib/premium-payment-shared";
 
@@ -22,7 +22,7 @@ export type PremiumPaymentConfig = {
 };
 
 export const PREMIUM_PUBLIC_QR_FILES: Record<PremiumPaymentMethod, string> = {
-  gcash_maya: "premium-payment/gcash-maya-qr.png",
+  gcash_maya: "assets/images/gcash_account.jpg",
   bdo: "premium-payment/bdo-qr.png",
   bpi: "premium-payment/bpi-qr.png",
 };
@@ -34,7 +34,7 @@ export const PREMIUM_ENV_QR_KEYS: Record<PremiumPaymentMethod, string> = {
 };
 
 export const PREMIUM_PAYMENT_INSTRUCTIONS: Record<PremiumPaymentMethod, string> = {
-  gcash_maya: "Open GCash or Maya, scan the QR code below, and pay the exact annual amount.",
+  gcash_maya: "Open GCash, scan the QR code below, and pay the exact annual amount.",
   bdo: "Open your BDO app, scan the QR code below, and pay the exact annual amount.",
   bpi: "Open your BPI app, scan the QR code below, and pay the exact annual amount.",
 };
@@ -42,7 +42,7 @@ export const PREMIUM_PAYMENT_INSTRUCTIONS: Record<PremiumPaymentMethod, string> 
 export function buildPremiumPaymentConfig(
   resolveQrUrl: (method: PremiumPaymentMethod) => string | null,
 ) {
-  const methods = PREMIUM_PAYMENT_METHODS.map((id) => {
+  const methods = PREMIUM_ACTIVE_PAYMENT_METHODS.map((id) => {
     const qrUrl = resolveQrUrl(id);
     return {
       id,
