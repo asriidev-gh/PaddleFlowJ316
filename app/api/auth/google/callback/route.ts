@@ -13,6 +13,7 @@ import {
   getGoogleRedirectUri,
   signAuthToken,
 } from "@/lib/auth";
+import { isGoogleAuthEnabled } from "@/lib/google-auth-config";
 
 type GoogleProfile = {
   sub: string;
@@ -26,6 +27,10 @@ export async function GET(request: Request) {
   const origin = new URL(request.url).origin;
   const loginRedirect = (message: string) =>
     NextResponse.redirect(`${origin}/login?error=${encodeURIComponent(message)}`);
+
+  if (!isGoogleAuthEnabled()) {
+    return loginRedirect("Google sign-in is not enabled.");
+  }
 
   try {
 

@@ -6,8 +6,16 @@ import {
   getGoogleOAuthConfig,
   getGoogleRedirectUri,
 } from "@/lib/auth";
+import { isGoogleAuthEnabled } from "@/lib/google-auth-config";
 
 export async function GET(request: Request) {
+  const origin = new URL(request.url).origin;
+  if (!isGoogleAuthEnabled()) {
+    return NextResponse.redirect(
+      `${origin}/login?error=${encodeURIComponent("Google sign-in is not enabled.")}`,
+    );
+  }
+
   try {
     const { clientId } = getGoogleOAuthConfig();
     const redirectUri = getGoogleRedirectUri(request.url);

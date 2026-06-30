@@ -7,8 +7,7 @@ import { clearAuthSessionCookie, getAuthCookieName, getAuthUserFromCookie } from
 export default async function Home() {
   const user = await getAuthUserFromCookie();
 
-  if (!user) {
-    const cookieStore = await cookies();
+  if (!user) {    const cookieStore = await cookies();
     if (cookieStore.get(getAuthCookieName())?.value) {
       await clearAuthSessionCookie();
     }

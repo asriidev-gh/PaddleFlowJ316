@@ -21,7 +21,6 @@ import {
   operatorShellQueryOptions,
 } from "@/lib/operator-query-options";
 import { useQuickGameSessionAfterMount } from "@/hooks/use-quick-game-session-after-mount";
-import { useQuickGameSession } from "@/lib/quick-game-store";
 
 function operatorPlaceholderShell(gameId: string): OperatorShellPayload {
   return {
@@ -37,8 +36,9 @@ function operatorPlaceholderShell(gameId: string): OperatorShellPayload {
 
 export function useSinglesOperatorSession(gameId: string) {
   const isQuickGameSession = isQuickGame(gameId);
-  const { mounted: quickMounted } = useQuickGameSessionAfterMount(isQuickGameSession ? gameId : "");
-  const quickPayload = useQuickGameSession(isQuickGameSession ? gameId : "");
+  const { payload: quickPayload, mounted: quickMounted } = useQuickGameSessionAfterMount(
+    isQuickGameSession ? gameId : "",
+  );
 
   const {
     leaseState: operatorLeaseState,
@@ -89,7 +89,7 @@ export function useSinglesOperatorSession(gameId: string) {
   ]);
 
   const isLoading = isQuickGameSession
-    ? !quickMounted
+    ? !quickMounted && !quickPayload
     : operatorShellQuery.isPending || operatorQueueQuery.isPending;
 
   return {

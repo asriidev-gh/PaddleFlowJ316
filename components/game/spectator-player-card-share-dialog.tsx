@@ -22,6 +22,7 @@ import {
   fetchSpectatePlayerEndorsementsReceived,
   spectatePlayerEndorsementsReceivedQueryKey,
 } from "@/lib/fetch-spectate-player-endorsement";
+import { isQuickGame } from "@/lib/local-game-id";
 import type { PlayerCardShareContent } from "@/lib/player-card-share-content";
 import { resolvePlayerCardShareSections } from "@/lib/player-card-share-content";
 import { formatPlayerDisplayName, cn } from "@/lib/utils";
@@ -73,10 +74,12 @@ export function SpectatorPlayerCardShareDialog({
 
   const [shareContent, setShareContent] = useState<PlayerCardShareContent>("stats");
 
+  const isLocalQuickGame = isQuickGame(gameId);
+
   const { data: endorsements = [], isLoading: endorsementsLoading } = useQuery({
     queryKey: spectatePlayerEndorsementsReceivedQueryKey(gameId, playerId),
     queryFn: () => fetchSpectatePlayerEndorsementsReceived(gameId, playerId),
-    enabled: open && Boolean(playerId),
+    enabled: open && Boolean(playerId) && !isLocalQuickGame,
     staleTime: 0,
   });
 

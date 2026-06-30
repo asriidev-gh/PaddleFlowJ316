@@ -19,12 +19,22 @@ export function useQuickGameSessionAfterMount(gameId: string): QuickGameSessionA
     setMounted(true);
   }, []);
 
-  if (!mounted || !gameId) {
-    return { payload: undefined, mounted };
+  if (!gameId) {
+    return { payload: undefined, mounted: false };
+  }
+
+  const syncPayload =
+    typeof window !== "undefined" ? sessionFromStore ?? readQuickGamePayload(gameId) : undefined;
+
+  if (!mounted) {
+    if (syncPayload) {
+      return { payload: syncPayload, mounted: true };
+    }
+    return { payload: undefined, mounted: false };
   }
 
   return {
-    payload: sessionFromStore ?? readQuickGamePayload(gameId),
+    payload: syncPayload,
     mounted: true,
   };
 }

@@ -59,6 +59,14 @@ export function clearEphemeralQuickGameSessions() {
   }
 }
 
+/** Replace all ephemeral sessions in one store write (faster than clear + create). */
+export function replaceEphemeralQuickGameSession(gameId: string, payload: OperatorFullPayload) {
+  if (!isEphemeralQuickGame(gameId)) {
+    throw new Error("replaceEphemeralQuickGameSession requires an ephemeral game id.");
+  }
+  useEphemeralQuickGameStore.setState({ sessions: { [gameId]: payload } });
+}
+
 export function clearAllQuickGameSessions() {
   useLocalGameStore.getState().clearAllSessions();
   useEphemeralQuickGameStore.getState().clearAllSessions();

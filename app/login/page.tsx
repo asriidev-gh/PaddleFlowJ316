@@ -7,10 +7,12 @@ import { Suspense, useCallback, useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import { LoginAlternateAuth } from "@/components/login/login-alternate-auth";
 import { LoginVideoIntro } from "@/components/login/login-video-intro";
 import { DeveloperCreditLink } from "@/components/developer-credit-link";
 import { WatchDemoButton } from "@/components/watch-demo-button";
 import { APP_NAME } from "@/lib/app-config";
+import { isLoginExtrasEnabled } from "@/lib/google-auth-config";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -21,7 +23,6 @@ import {
   resolvePostAuthDestination,
 } from "@/lib/post-auth-redirect";
 import {
-  WIZARD_OUTLINE_BUTTON_BORDER,
   WIZARD_PRIMARY_FIELD_BORDER,
   WIZARD_PRIMARY_FIELDS_SCOPE,
 } from "@/lib/wizard-field-styles";
@@ -44,7 +45,9 @@ function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
-  const skipIntro = searchParams.get("saveQuickPlay") === "1";
+  const loginExtrasEnabled = isLoginExtrasEnabled();
+  const skipIntro =
+    searchParams.get("saveQuickPlay") === "1" || !loginExtrasEnabled;
   const [introPlayed, setIntroPlayed] = useState(false);
   const introDone = skipIntro || introPlayed;
 
@@ -121,35 +124,48 @@ function LoginForm() {
 
   return (
     <>
-      <div className="login-page__bg" aria-hidden="true">
-        <Image
-          src="/assets/images/login_logo.jpeg"
-          alt=""
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover object-center"
-        />
-      </div>
+      {loginExtrasEnabled ? (
+        <div className="login-page__bg" aria-hidden="true">
+          <Image
+            src="/assets/images/login_logo.jpeg"
+            alt=""
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover object-center"
+          />
+        </div>
+      ) : null}
 
       <header className="login-page-header absolute inset-x-0 top-0 z-20 border-b border-border/60 bg-background/85 py-3 backdrop-blur-sm">
         <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-3 px-6">
           <span className="app-brand">{APP_NAME}</span>
-          <WatchDemoButton />
+          {loginExtrasEnabled ? <WatchDemoButton /> : null}
         </div>
       </header>
 
-      <main className="login-page relative isolate z-10 flex min-h-[100dvh] flex-col items-center justify-center overflow-hidden p-6">
-        {!introDone && !skipIntro ? <LoginVideoIntro onComplete={handleIntroComplete} /> : null}
+      <main
+        className={cn(
+          "login-page relative isolate z-10 flex min-h-[100dvh] flex-col items-center justify-center p-6",
+          loginExtrasEnabled && "overflow-hidden",
+        )}
+      >
+        {loginExtrasEnabled && !introDone && !skipIntro ? (
+          <LoginVideoIntro onComplete={handleIntroComplete} />
+        ) : null}
 
         <div
           className={cn(
-            "relative z-10 flex w-full max-w-md flex-col items-center gap-6 transition-all duration-700 ease-out",
-            introDone
-              ? "-translate-y-[60px] opacity-100"
-              : "pointer-events-none translate-y-4 opacity-0",
+            "relative z-10 flex w-full max-w-md flex-col items-center gap-6",
+            loginExtrasEnabled &&
+              "transition-all duration-700 ease-out",
+            loginExtrasEnabled
+              ? introDone
+                ? "-translate-y-[60px] opacity-100"
+                : "pointer-events-none translate-y-4 opacity-0"
+              : "opacity-100",
           )}
-          aria-hidden={!introDone}
+          aria-hidden={loginExtrasEnabled ? !introDone : false}
         >
           <Card className="glass-panel w-full max-w-md">
             <CardHeader className="text-center">
@@ -207,37 +223,15 @@ function LoginForm() {
                   </button>
                 </div>
               </div>
-              <Button className="w-full" onClick={submit} disabled={loading || !introDone}>
+              <Button className="w-full" onClick={submit} disabled={loading || (loginExtrasEnabled && !introDone)}>
                 {loading ? "Please wait..." : mode === "login" ? "Login" : "Create Account"}
               </Button>
 
-              <div className="flex items-center gap-3">
-                <span className="h-px flex-1 bg-border" />
-                <span className="text-xs text-muted-foreground">or</span>
-                <span className="h-px flex-1 bg-border" />
-              </div>
-
-              <Button
-                type="button"
-                variant="outline"
-                className={cn("w-full", WIZARD_OUTLINE_BUTTON_BORDER)}
-                disabled={loading || !introDone}
-                onClick={() => {
-                  window.location.href = "/api/auth/google";
-                }}
-              >
-                <GoogleIcon />
-                Continue with Google
-              </Button>
-
-              <Button
-                variant="ghost"
-                className="w-full"
-                disabled={!introDone}
-                onClick={() => setMode((prev) => (prev === "login" ? "register" : "login"))}
-              >
-                {mode === "login" ? "Need an account? Sign up" : "Already have an account? Log in"}
-              </Button>
+              <LoginAlternateAuth
+                disabled={loading || (loginExtrasEnabled && !introDone)}
+                mode={mode}
+                onToggleMode={() => setMode((prev) => (prev === "login" ? "register" : "login"))}
+              />
             </CardContent>
           </Card>
           <p className="text-center text-xs text-muted-foreground">
@@ -246,28 +240,5 @@ function LoginForm() {
         </div>
       </main>
     </>
-  );
-}
-
-function GoogleIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className="size-4">
-      <path
-        fill="#4285F4"
-        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1Z"
-      />
-      <path
-        fill="#34A853"
-        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23Z"
-      />
-      <path
-        fill="#FBBC05"
-        d="M5.84 14.1a6.6 6.6 0 0 1 0-4.2V7.06H2.18a11 11 0 0 0 0 9.88l3.66-2.84Z"
-      />
-      <path
-        fill="#EA4335"
-        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84C6.71 7.3 9.14 5.38 12 5.38Z"
-      />
-    </svg>
   );
 }

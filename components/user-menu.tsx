@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CircleUser, LogOut, ScrollText, Settings, ToggleLeft, TrendingUp } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -22,6 +22,7 @@ import {
 
 export function UserMenu() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [menuOpen, setMenuOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
@@ -51,7 +52,7 @@ export function UserMenu() {
 
   const logout = () => {
     toast.success("Logged out.");
-    performClientLogout();
+    performClientLogout(queryClient);
   };
 
   return (

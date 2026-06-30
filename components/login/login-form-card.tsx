@@ -6,7 +6,7 @@ import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import { GoogleAuthIcon } from "@/components/login/google-auth-icon";
+import { LoginAlternateAuth } from "@/components/login/login-alternate-auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -17,7 +17,6 @@ import {
   resolvePostAuthDestination,
 } from "@/lib/post-auth-redirect";
 import {
-  WIZARD_OUTLINE_BUTTON_BORDER,
   WIZARD_PRIMARY_FIELD_BORDER,
   WIZARD_PRIMARY_FIELDS_SCOPE,
 } from "@/lib/wizard-field-styles";
@@ -157,33 +156,12 @@ export function LoginFormCard({
           {loading ? "Please wait..." : mode === "login" ? "Sign in" : "Create account"}
         </Button>
 
-        <div className="flex items-center gap-3">
-          <span className="h-px flex-1 bg-border" />
-          <span className="text-xs text-muted-foreground">or</span>
-          <span className="h-px flex-1 bg-border" />
-        </div>
-
-        <Button
-          type="button"
-          variant="outline"
-          className={cn("w-full", WIZARD_OUTLINE_BUTTON_BORDER)}
+        <LoginAlternateAuth
           disabled={loading}
-          onClick={() => {
-            window.location.href = "/api/auth/google";
-          }}
-        >
-          <GoogleAuthIcon />
-          Continue with Google
-        </Button>
-
-        <Button
-          variant="ghost"
-          className="w-full"
-          disabled={loading}
-          onClick={() => onModeChange(mode === "login" ? "register" : "login")}
-        >
-          {mode === "login" ? "Need an account? Sign up" : "Already have an account? Sign in"}
-        </Button>
+          mode={mode}
+          onToggleMode={() => onModeChange(mode === "login" ? "register" : "login")}
+          logInLabel="Already have an account? Sign in"
+        />
       </CardContent>
     </Card>
   );

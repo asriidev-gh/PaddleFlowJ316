@@ -1,5 +1,6 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { Building2, House, LayoutGrid, LogOut, Plus, Store } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { toast } from "sonner";
@@ -15,6 +16,7 @@ type HomeMobileNavProps = {
 
 export function HomeMobileNav({ onCreateGame }: HomeMobileNavProps) {
   const pathname = usePathname();
+  const queryClient = useQueryClient();
   const { data: authData } = useAuthMe();
   const ownerHubToolsEnabled = canUseOwnerHubTools(authData?.user);
 
@@ -25,7 +27,7 @@ export function HomeMobileNav({ onCreateGame }: HomeMobileNavProps) {
 
   const logout = () => {
     toast.success("Logged out.");
-    performClientLogout();
+    performClientLogout(queryClient);
   };
 
   return (

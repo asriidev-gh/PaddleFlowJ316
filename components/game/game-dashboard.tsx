@@ -2090,8 +2090,10 @@ export function GameDashboard({ mode = "operator", quickGameSurface }: GameDashb
   if (!data) {
     if (isQuickGameSession && !isSpectator) {
       return (
-        <main className="game-dashboard--operator flex min-h-screen items-center justify-center p-6">
-          <p className="text-sm text-muted-foreground">Loading session…</p>
+        <main className="game-dashboard--operator flex min-h-screen flex-col items-center justify-center gap-3 p-6">
+          <Loader2 className="h-10 w-10 animate-spin text-primary" aria-hidden />
+          <p className="text-base font-medium text-foreground">Loading session…</p>
+          <p className="caption text-muted-foreground">Setting up courts and queue.</p>
         </main>
       );
     }
@@ -2252,8 +2254,10 @@ export function GameDashboard({ mode = "operator", quickGameSurface }: GameDashb
     );
   };
 
-  const renderSpectatorShareAction = (entry: QueueEntryView, compact?: boolean) => {
-    if (!isSpectator || isPastGame) return undefined;
+  const renderQueueShareAction = (entry: QueueEntryView, compact?: boolean) => {
+    const canSharePlayerCard =
+      !isPastGame && (isSpectator || (isQuickGameSession && !hideControls));
+    if (!canSharePlayerCard) return undefined;
 
     const playerId = queueEntryPlayerId(entry);
     if (!playerId) return undefined;
@@ -2402,7 +2406,7 @@ export function GameDashboard({ mode = "operator", quickGameSurface }: GameDashb
             : undefined
         }
         endorseAction={renderSpectatorEndorseAction(entry, options?.compactName)}
-        shareAction={renderSpectatorShareAction(entry, options?.compactName)}
+        shareAction={renderQueueShareAction(entry, options?.compactName)}
       />
     );
   };
@@ -2783,9 +2787,7 @@ export function GameDashboard({ mode = "operator", quickGameSurface }: GameDashb
                 showEndorsementInPlayerLabel={showSpectatorEndorsementInPlayerLabel}
                 getEndorsementCount={getPlayerEndorsementCount}
                 onEndorsementClick={(entry) => setEndorseListTargetEntry(entry)}
-                renderShareAction={
-                  isSpectator ? (entry) => renderSpectatorShareAction(entry) : undefined
-                }
+                renderShareAction={(entry) => renderQueueShareAction(entry)}
                 renderEndorseAction={
                   isSpectator ? (entry) => renderSpectatorEndorseAction(entry) : undefined
                 }
@@ -3624,26 +3626,39 @@ export function GameDashboard({ mode = "operator", quickGameSurface }: GameDashb
               if (!open) setEndorseTargetEntry(null);
             }}
           />
-          {spectatorSharePreviewEntry ? (
-            <SpectatorPlayerCardShareDialog
-              gameId={gameId}
-              entry={spectatorSharePreviewEntry}
-              playerId={queueEntryPlayerId(spectatorSharePreviewEntry)!}
-              selfPlayerIds={selfPlayerIds}
-              gameTitle={game.title}
-              clubName={spectatorLiveQuery.data?.clubBranding?.clubName ?? null}
-              clubLogoUrl={spectatorLiveQuery.data?.clubBranding?.clubLogoUrl ?? null}
-              clubTagline={spectatorLiveQuery.data?.clubBranding?.clubTagline ?? null}
-              openPlaySchedule={openPlayScheduleLabel}
-              venueLabel={venueShareLabel}
-              leaderboardRankMap={leaderboardRankMap}
-              open
-              onOpenChange={(open) => {
-                if (!open) setSpectatorSharePreviewEntry(null);
-              }}
-            />
-          ) : null}
         </>
+      ) : null}
+
+      {spectatorSharePreviewEntry && queueEntryPlayerId(spectatorSharePreviewEntry) ? (
+        <SpectatorPlayerCardShareDialog
+          gameId={gameId}
+          entry={spectatorSharePreviewEntry}
+          playerId={queueEntryPlayerId(spectatorSharePreviewEntry)!}
+          selfPlayerIds={isSpectator ? selfPlayerIds : undefined}
+          gameTitle={game.title}
+          clubName={
+            isSpectator
+              ? (spectatorLiveQuery.data?.clubBranding?.clubName ?? null)
+              : (shareCardClubBranding?.clubName ?? null)
+          }
+          clubLogoUrl={
+            isSpectator
+              ? (spectatorLiveQuery.data?.clubBranding?.clubLogoUrl ?? null)
+              : (shareCardClubBranding?.clubLogoUrl ?? null)
+          }
+          clubTagline={
+            isSpectator
+              ? (spectatorLiveQuery.data?.clubBranding?.clubTagline ?? null)
+              : (shareCardClubBranding?.clubTagline ?? null)
+          }
+          openPlaySchedule={openPlayScheduleLabel}
+          venueLabel={venueShareLabel}
+          leaderboardRankMap={leaderboardRankMap}
+          open
+          onOpenChange={(open) => {
+            if (!open) setSpectatorSharePreviewEntry(null);
+          }}
+        />
       ) : null}
 
       <SpectatePlayerEndorsementsListDialog

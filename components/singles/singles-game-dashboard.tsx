@@ -34,6 +34,8 @@ import {
   SortableQueueList,
   type QueueDragHandleProps,
 } from "@/components/game/sortable-queue-list";
+import { SpectatorPlayerCardShareButton } from "@/components/game/spectator-player-card-share-button";
+import { SpectatorPlayerCardShareDialog } from "@/components/game/spectator-player-card-share-dialog";
 import { SinglesCourtCard } from "@/components/singles/singles-court-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -48,7 +50,11 @@ import {
   beginEphemeralQuickGameSaveToAccount,
   promptSaveEphemeralQuickGame,
 } from "@/lib/ephemeral-quick-game-transfer";
-import { formatOpenPlayDate } from "@/lib/open-play-time-range";
+import {
+  formatOpenPlayDate,
+  formatOpenPlayScheduleLabel,
+  formatVenueShareLabel,
+} from "@/lib/open-play-time-range";
 import {
   applyCheckoutOptimistic,
   applyCourtPauseOptimistic,
@@ -135,6 +141,7 @@ export function SinglesGameDashboard({ quickGameSurface }: SinglesGameDashboardP
   const [replaceDialog, setReplaceDialog] = useState<ReplacePlayerDialogState | null>(null);
   const [addPlayerOpen, setAddPlayerOpen] = useState(false);
   const [undefeatedHistoryEntry, setUndefeatedHistoryEntry] = useState<QueueEntryView | null>(null);
+  const [sharePreviewEntry, setSharePreviewEntry] = useState<QueueEntryView | null>(null);
 
   useEffect(() => {
     setShowMatchHistory(loadMatchHistoryVisible());
@@ -686,6 +693,12 @@ export function SinglesGameDashboard({ quickGameSurface }: SinglesGameDashboardP
 
   const openPlayDateLabel = game ? formatOpenPlayDate(game.openPlayDate) : null;
   const openPlayTimeLabel = game?.openPlayTimeRange?.trim() || null;
+  const openPlayScheduleLabel = game
+    ? formatOpenPlayScheduleLabel(game.openPlayDate, game.openPlayTimeRange)
+    : null;
+  const venueShareLabel = game
+    ? formatVenueShareLabel(game.venueName, game.venueAddress)
+    : null;
   const leaderboardHref = `/leaderboard/${gameId}`;
   const quickGameHomeHref = isEphemeralQuickSession ? "/play" : "/";
 
@@ -766,6 +779,13 @@ export function SinglesGameDashboard({ quickGameSurface }: SinglesGameDashboardP
         leaderboardRankMap={leaderboardRankMap}
         onUndefeatedClick={
           showUndefeatedForEntry(entry) ? () => openUndefeatedHistory(entry) : undefined
+        }
+        shareAction={
+          isQuickGameSession && !isPastGame && queueEntryPlayerId(entry) ? (
+            <SpectatorPlayerCardShareButton
+              onOpen={() => setSharePreviewEntry(entry)}
+            />
+          ) : undefined
         }
         dragHandle={
           drag ? (
@@ -1266,6 +1286,22 @@ export function SinglesGameDashboard({ quickGameSurface }: SinglesGameDashboardP
             wins={undefeatedHistoryEntry.wins ?? 0}
             losses={undefeatedHistoryEntry.losses ?? 0}
             matches={matches}
+          />
+        ) : null}
+
+        {sharePreviewEntry && queueEntryPlayerId(sharePreviewEntry) ? (
+          <SpectatorPlayerCardShareDialog
+            gameId={gameId}
+            entry={sharePreviewEntry}
+            playerId={queueEntryPlayerId(sharePreviewEntry)!}
+            gameTitle={game.title}
+            openPlaySchedule={openPlayScheduleLabel}
+            venueLabel={venueShareLabel}
+            leaderboardRankMap={leaderboardRankMap}
+            open
+            onOpenChange={(open) => {
+              if (!open) setSharePreviewEntry(null);
+            }}
           />
         ) : null}
       </main>

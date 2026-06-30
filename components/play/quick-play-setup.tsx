@@ -37,9 +37,7 @@ import {
   playerDisplayNameTooLongMessage,
 } from "@/lib/player-profile-shared";
 import {
-  clearEphemeralQuickGameSessions,
-  initializeQuickGameSession,
-  writeQuickGamePayload,
+  replaceEphemeralQuickGameSession,
 } from "@/lib/quick-game-store";
 import {
   DEFAULT_PLAYER_OPEN_PLAY_LEVEL,
@@ -222,7 +220,13 @@ export function QuickPlaySetup() {
     setStep((prev) => Math.min(QUICK_PLAY_TOTAL_STEPS, prev + 1));
   };
 
-  const submit = async () => {
+  useEffect(() => {
+    if (step === QUICK_PLAY_TOTAL_STEPS) {
+      router.prefetch("/play/session-prefetch");
+    }
+  }, [router, step]);
+
+  const submit = () => {
     if (hasActiveSession) {
       toast.error("End your active session before starting a new one.");
       setStep(1);
@@ -246,8 +250,8 @@ export function QuickPlaySetup() {
 
     try {
       setLoading(true);
-      clearEphemeralQuickGameSessions();
       const gameId = createEphemeralQuickGameId();
+      const dashboardPath = getQuickGameDashboardPath(gameId);
       const session = createLocalLiveQueueSession({
         gameId,
         title: sessionTitle,
@@ -268,16 +272,17 @@ export function QuickPlaySetup() {
         matchingType: form.matchingType,
       });
 
-      initializeQuickGameSession(gameId, session);
-      writeQuickGamePayload(gameId, session);
-      seedLocalGameOperatorCache(queryClient, gameId);
-      toast.success(
-        `Session started.${playersForSubmit.length > 0 ? ` ${playersForSubmit.length} players added.` : ""}`,
-      );
-      router.push(getQuickGameDashboardPath(gameId));
+      replaceEphemeralQuickGameSession(gameId, session);
+      router.push(dashboardPath);
+      queueMicrotask(() => {
+        seedLocalGameOperatorCache(queryClient, gameId);
+        const playerCount = playersForSubmit.length;
+        toast.success(
+          `Session started.${playerCount > 0 ? ` ${playerCount} players added.` : ""}`,
+        );
+      });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to start session.");
-    } finally {
       setLoading(false);
     }
   };

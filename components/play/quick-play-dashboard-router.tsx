@@ -1,6 +1,5 @@
 "use client";
 
-import { Loader2 } from "lucide-react";
 import { useParams } from "next/navigation";
 
 import { GameDashboard } from "@/components/game/game-dashboard";
@@ -14,18 +13,7 @@ type QuickPlayDashboardRouterProps = {
 
 export function QuickPlayDashboardRouter({ quickGameSurface }: QuickPlayDashboardRouterProps) {
   const gameId = String(useParams().id ?? "");
-  const { payload, mounted } = useQuickGameSessionAfterMount(gameId);
-
-  if (!mounted) {
-    return (
-      <main className="flex min-h-screen items-center justify-center p-6">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Loader2 className="size-5 animate-spin" aria-hidden />
-          Loading session…
-        </div>
-      </main>
-    );
-  }
+  const { payload } = useQuickGameSessionAfterMount(gameId);
 
   if (payload?.game.gameMode === "singles" && isQuickGame(gameId)) {
     return <SinglesGameDashboard quickGameSurface={quickGameSurface} />;

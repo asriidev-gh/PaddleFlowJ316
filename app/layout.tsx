@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { Analytics } from "@vercel/analytics/next";
 import {
   Bebas_Neue,
   Geist_Mono,
@@ -85,6 +86,7 @@ export default function RootLayout({
           </Suspense>
           <div className="flex min-h-0 flex-1 flex-col">{children}</div>
           <AppFooter />
+          <Analytics />
         </Providers>
       </body>
     </html>

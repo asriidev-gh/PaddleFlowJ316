@@ -7,6 +7,7 @@ import type { QueueEntryView } from "@/components/game/queue-entry-row";
 import { useAppTheme } from "@/components/theme/theme-manager";
 import { trackSpectatorPlayerCardShare } from "@/lib/fetch-spectate-player-card-share";
 import { getPlayerLeaderboardRank } from "@/lib/games-played-map";
+import { isQuickGame } from "@/lib/local-game-id";
 import { getShareCardSiteLabel } from "@/lib/share-card-site-label";
 import {
   captureElementAsPng,
@@ -79,9 +80,11 @@ export function useSpectatorPlayerCardShare({
       toast.success(
         result === "shared" ? "Player card shared." : "Player card downloaded.",
       );
-      void trackSpectatorPlayerCardShare(gameId, entry._id, playerId, selfPlayerIds).catch(() => {
-        // Share already succeeded; tracking is best-effort for organizers.
-      });
+      if (!isQuickGame(gameId)) {
+        void trackSpectatorPlayerCardShare(gameId, entry._id, playerId, selfPlayerIds).catch(() => {
+          // Share already succeeded; tracking is best-effort for organizers.
+        });
+      }
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") return;
       toast.error(
