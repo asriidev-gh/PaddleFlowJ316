@@ -22,6 +22,7 @@ import {
 } from "@/lib/club-signup-shared";
 import { useClubLinkPrefix } from "@/hooks/use-club-link-prefix";
 import { useMarketingLightTheme } from "@/hooks/use-marketing-light-theme";
+import { persistAppTheme, type AppTheme } from "@/components/theme/theme-manager";
 import {
   WIZARD_PRIMARY_FIELD_BORDER,
   WIZARD_PRIMARY_FIELDS_SCOPE,
@@ -151,7 +152,14 @@ function ClubSignupForm({
     }));
   }, [newClubForm.clubName, slugTouched]);
 
-  const finishAuth = async (message: string) => {
+  const finishAuth = async (
+    message: string,
+    options?: { theme?: AppTheme },
+  ) => {
+    if (options?.theme) {
+      persistAppTheme(options.theme);
+    }
+
     void queryClient.invalidateQueries({ queryKey: ["auth-me"] });
 
     if (readPendingEphemeralQuickGameTransfer()) {
@@ -216,7 +224,9 @@ function ClubSignupForm({
       const data = (await response.json()) as { message?: string };
       if (!response.ok) throw new Error(data.message ?? "Failed to create club.");
 
-      await finishAuth("Club created. Check your email to verify your account.");
+      await finishAuth("Club created. Check your email to verify your account.", {
+        theme: "smarthome",
+      });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to create club.");
     } finally {

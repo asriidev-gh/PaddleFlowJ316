@@ -1,5 +1,5 @@
 export const THEME_STORAGE_KEY = "ccf-theme";
-export const DEFAULT_THEME = "neon";
+export const DEFAULT_THEME = "smarthome";
 export const QUICK_GAME_DEFAULT_THEME = "material";
 
 export const APP_THEME_VALUES = [

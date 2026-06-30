@@ -42,6 +42,12 @@ export function applyTheme(theme: AppTheme) {
   document.documentElement.setAttribute("data-theme", theme);
 }
 
+export function persistAppTheme(theme: AppTheme) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(THEME_STORAGE_KEY, theme);
+  applyTheme(theme);
+}
+
 export function isQuickGameAppPath(pathname: string) {
   return pathname === "/quick-game" || pathname === "/play" || pathname.startsWith("/play/");
 }

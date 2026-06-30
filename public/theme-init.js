@@ -21,6 +21,6 @@
     }
     var p = location.pathname;
     var q = p === "/quick-game" || p === "/play" || p.indexOf("/play/") === 0;
-    document.documentElement.setAttribute("data-theme", q ? "material" : "neon");
+    document.documentElement.setAttribute("data-theme", q ? "material" : "smarthome");
   } catch (e) {}
 })();

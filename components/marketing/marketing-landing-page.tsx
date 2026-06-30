@@ -114,7 +114,7 @@ export function MarketingLandingPage() {
               <div className="relative z-10 space-y-6">
                 <p className="marketing-landing__eyebrow">Open play queue manager</p>
                 <h1 className="marketing-landing__headline">
-                  Simpler court rotation for busy pickleball nights
+                  Less queue chaos. More time on court.
                 </h1>
                 <p className="marketing-landing__lead">
                   {APP_NAME} keeps your queue, courts, and player check-in in one place — so you
@@ -125,7 +125,7 @@ export function MarketingLandingPage() {
                     href="/play"
                     className={marketingLinkClass("default", "lg", "bg-emerald-600 text-white hover:bg-emerald-700")}
                   >
-                    Start free session, try without account!
+                    Start NOW! It's absolutely FREE!
                   </a>
                 </div>
                 <p className="text-sm text-emerald-900/70">

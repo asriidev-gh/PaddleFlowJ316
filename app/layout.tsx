@@ -68,7 +68,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      data-theme="neon"
+      data-theme="smarthome"
       suppressHydrationWarning
       className={`${appSans.variable} ${geistMono.variable} ${roboto.variable} ${outfit.variable} ${bebasNeue.variable} ${oswald.variable} h-full`}
     >
