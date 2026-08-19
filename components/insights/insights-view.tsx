@@ -30,6 +30,7 @@ import Swal from "sweetalert2";
 import { toast } from "sonner";
 
 import { ChangeUserPasswordDialog } from "@/components/insights/change-user-password-dialog";
+import { PremiumRequestsPanel } from "@/components/insights/premium-requests-panel";
 import { QuickPlayUsagePanel } from "@/components/insights/quick-play-usage-panel";
 import { SystemLogsPanel } from "@/components/insights/system-logs-panel";
 import { buildImpersonateUrl } from "@/lib/browser-origin";
@@ -1315,7 +1316,7 @@ function PlayersPanel() {
   );
 }
 
-type InsightsTab = "overview" | "users" | "players" | "quick-play" | "system-logs";
+type InsightsTab = "overview" | "users" | "players" | "premium" | "quick-play" | "system-logs";
 
 export function InsightsView({ insights }: { insights: UserInsights }) {
   const [tab, setTab] = useState<InsightsTab>("overview");
@@ -1358,10 +1359,11 @@ export function InsightsView({ insights }: { insights: UserInsights }) {
         </div>
 
         <Tabs value={tab} onValueChange={(value) => setTab(value as InsightsTab)}>
-          <TabsList>
+          <TabsList className="h-auto min-h-8 flex-wrap">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="users">User List</TabsTrigger>
             <TabsTrigger value="players">Players Registered</TabsTrigger>
+            <TabsTrigger value="premium">Premium</TabsTrigger>
             <TabsTrigger value="quick-play">Quick Play</TabsTrigger>
             <TabsTrigger value="system-logs">System Logs</TabsTrigger>
           </TabsList>
@@ -1450,6 +1452,10 @@ export function InsightsView({ insights }: { insights: UserInsights }) {
 
           <TabsContent value="players">
             {tab === "players" ? <PlayersPanel /> : null}
+          </TabsContent>
+
+          <TabsContent value="premium">
+            {tab === "premium" ? <PremiumRequestsPanel /> : null}
           </TabsContent>
 
           <TabsContent value="quick-play">

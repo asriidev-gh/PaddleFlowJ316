@@ -1,4 +1,9 @@
 import { isCloudinaryConfigured } from "@/lib/cloudinary";
+import type {
+  InsightsPremiumRequestItem,
+  InsightsPremiumRequestsPayload,
+  InsightsPremiumReviewAction,
+} from "@/lib/insights-premium-shared";
 import {
   formatPremiumPaymentMethod,
   formatPremiumUpgradeRequestStatus,
@@ -124,4 +129,104 @@ export async function createPremiumUpgradeRequest(
   });
 
   return serializeRequest(created);
+}
+
+type PremiumUpgradeRequestDoc = {
+  _id: { toString(): string };
+  userId: { toString(): string };
+  userEmail: string;
+  userName: string;
+  paymentMethod: PremiumPaymentMethod;
+  amountPhp: number;
+  payerNote?: string | null;
+  proofUrl: string;
+  status: PremiumUpgradeRequestStatus;
+  createdAt?: Date;
+  reviewedAt?: Date | null;
+};
+
+function serializeInsightsRequest(
+  doc: PremiumUpgradeRequestDoc,
+  userIsPremium: boolean,
+): InsightsPremiumRequestItem {
+  return {
+    id: doc._id.toString(),
+    userId: doc.userId.toString(),
+    userName: doc.userName,
+    userEmail: doc.userEmail,
+    paymentMethod: doc.paymentMethod,
+    paymentMethodLabel: formatPremiumPaymentMethod(doc.paymentMethod),
+    amountPhp: doc.amountPhp,
+    payerNote: doc.payerNote?.trim() ?? "",
+    proofUrl: doc.proofUrl,
+    status: doc.status,
+    statusLabel: formatPremiumUpgradeRequestStatus(doc.status),
+    userIsPremium,
+    createdAt: doc.createdAt?.toISOString() ?? new Date().toISOString(),
+    reviewedAt: doc.reviewedAt ? doc.reviewedAt.toISOString() : null,
+  };
+}
+
+export async function listPremiumUpgradeRequestsForInsights(): Promise<InsightsPremiumRequestsPayload> {
+  const docs = await PremiumUpgradeRequest.find({})
+    .sort({ createdAt: -1 })
+    .lean<PremiumUpgradeRequestDoc[]>();
+
+  const userIds = [...new Set(docs.map((doc) => doc.userId.toString()))];
+  const users = userIds.length
+    ? await User.find({ _id: { $in: userIds } })
+        .select("isPremium")
+        .lean<Array<{ _id: { toString(): string }; isPremium?: boolean }>>()
+    : [];
+  const premiumByUserId = new Map(
+    users.map((user) => [user._id.toString(), user.isPremium === true] as const),
+  );
+
+  const requests = docs.map((doc) =>
+    serializeInsightsRequest(doc, premiumByUserId.get(doc.userId.toString()) === true),
+  );
+
+  return {
+    requests,
+    counts: {
+      pending: requests.filter((request) => request.status === "pending").length,
+      approved: requests.filter((request) => request.status === "approved").length,
+      rejected: requests.filter((request) => request.status === "rejected").length,
+      total: requests.length,
+    },
+  };
+}
+
+export async function reviewPremiumUpgradeRequest(input: {
+  requestId: string;
+  action: InsightsPremiumReviewAction;
+  reviewerUserId: string;
+}) {
+  const doc = await PremiumUpgradeRequest.findById(input.requestId);
+  if (!doc) {
+    throw new Error("Premium submission not found.");
+  }
+
+  if (input.action === "approve") {
+    doc.status = "approved";
+    doc.reviewedAt = new Date();
+    doc.reviewedByUserId = input.reviewerUserId;
+    await doc.save();
+    await User.findByIdAndUpdate(doc.userId, { $set: { isPremium: true } });
+    return { message: "Premium access granted." };
+  }
+
+  if (input.action === "reject") {
+    if (doc.status !== "pending") {
+      throw new Error("Only pending submissions can be marked as not approved.");
+    }
+    doc.status = "rejected";
+    doc.reviewedAt = new Date();
+    doc.reviewedByUserId = input.reviewerUserId;
+    await doc.save();
+    return { message: "Submission marked as not approved." };
+  }
+
+  await User.findByIdAndUpdate(doc.userId, { $set: { isPremium: false } });
+  return { message: "Premium access removed." };
 }

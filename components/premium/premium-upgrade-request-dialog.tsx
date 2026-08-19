@@ -154,8 +154,10 @@ export function PremiumUpgradeRequestDialog({ open, onOpenChange }: PremiumUpgra
           </DialogTitle>
           <DialogDescription>
             <span className="font-semibold text-foreground">{config.formattedPrice}</span>{" "}
-            {config.billingPeriodLabel}. Pay using one of the options below, then upload your proof of
-            payment.
+            {config.billingPeriodLabel}.
+            {showThanks
+              ? null
+              : " Pay using one of the options below, then upload your proof of payment."}
           </DialogDescription>
         </DialogHeader>
 
