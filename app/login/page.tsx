@@ -26,7 +26,7 @@ import {
   WIZARD_PRIMARY_FIELD_BORDER,
   WIZARD_PRIMARY_FIELDS_SCOPE,
 } from "@/lib/wizard-field-styles";
-import { safeRouterPush, safeRouterReplace } from "@/lib/safe-router";
+import { hardNavigate, safeRouterReplace } from "@/lib/safe-router";
 import { cn } from "@/lib/utils";
 
 export default function LoginPage() {
@@ -99,22 +99,19 @@ function LoginForm() {
           const destination = resolvePostAuthDestination({
             saveQuickPlay: isSaveQuickPlaySearchParam(searchParams),
           });
-          safeRouterPush(router, destination);
-          router.refresh();
+          hardNavigate(destination);
           return;
         }
       }
 
       toast.success(mode === "login" ? "Welcome back!" : "Account created. Check your email to verify your account.");
 
-      safeRouterPush(
-        router,
+      hardNavigate(
         resolvePostAuthDestination({
           saveQuickPlay: isSaveQuickPlaySearchParam(searchParams),
           returnTo: searchParams.get("returnTo"),
         }),
       );
-      router.refresh();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Authentication failed.");
     } finally {

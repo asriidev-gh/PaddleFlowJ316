@@ -1,7 +1,6 @@
 "use client";
 
 import { Eye, EyeOff } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -14,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { APP_NAME } from "@/lib/app-config";
 import { readPendingEphemeralQuickGameTransfer } from "@/lib/ephemeral-quick-game-transfer-pending";
 import { SAVE_QUICK_PLAY_POST_AUTH_PATH } from "@/lib/post-auth-redirect";
-import { safeRouterPush } from "@/lib/safe-router";
+import { hardNavigate } from "@/lib/safe-router";
 import {
   normalizeClubSlug,
   sanitizeClubSlugInput,
@@ -118,7 +117,6 @@ function ClubSignupForm({
   saveQuickPlay: boolean;
   defaultTab: SignupTab;
 }) {
-  const router = useRouter();
   const queryClient = useQueryClient();
   useMarketingLightTheme(saveQuickPlay);
   const clubLinkPrefix = useClubLinkPrefix();
@@ -182,8 +180,7 @@ function ClubSignupForm({
     }
 
     toast.success(message);
-    safeRouterPush(router, saveQuickPlay ? SAVE_QUICK_PLAY_POST_AUTH_PATH : "/");
-    void router.refresh();
+    hardNavigate(saveQuickPlay ? SAVE_QUICK_PLAY_POST_AUTH_PATH : "/");
   };
 
   const submitNewClub = async () => {

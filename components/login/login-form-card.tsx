@@ -1,7 +1,7 @@
 "use client";
 
 import { Eye, EyeOff } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -20,6 +20,7 @@ import {
   WIZARD_PRIMARY_FIELD_BORDER,
   WIZARD_PRIMARY_FIELDS_SCOPE,
 } from "@/lib/wizard-field-styles";
+import { hardNavigate } from "@/lib/safe-router";
 import { cn } from "@/lib/utils";
 
 type LoginFormCardProps = {
@@ -37,7 +38,6 @@ export function LoginFormCard({
   onSuccess,
   className,
 }: LoginFormCardProps) {
-  const router = useRouter();
   const queryClient = useQueryClient();
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
@@ -68,8 +68,7 @@ export function LoginFormCard({
           const destination = resolvePostAuthDestination({
             saveQuickPlay: saveQuickPlayHint || isSaveQuickPlaySearchParam(searchParams),
           });
-          router.push(destination);
-          router.refresh();
+          hardNavigate(destination);
           return;
         }
       }
@@ -81,13 +80,12 @@ export function LoginFormCard({
       );
 
       onSuccess?.();
-      router.push(
+      hardNavigate(
         resolvePostAuthDestination({
           saveQuickPlay: saveQuickPlayHint || isSaveQuickPlaySearchParam(searchParams),
           returnTo: searchParams.get("returnTo"),
         }),
       );
-      router.refresh();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Authentication failed.");
     } finally {

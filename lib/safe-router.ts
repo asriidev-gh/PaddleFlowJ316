@@ -19,3 +19,8 @@ export function safeRouterPush(router: RouterLike, href: string) {
     window.location.assign(href);
   }
 }
+
+/** Full document load after setting an auth cookie — avoids a stale RSC flight. */
+export function hardNavigate(href: string) {
+  window.location.assign(href);
+}
