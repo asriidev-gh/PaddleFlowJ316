@@ -40,13 +40,18 @@ export function getClubLinkPrefix(host?: string) {
   return getClubLinkPrefixFallback();
 }
 
-export function normalizeClubSlug(raw: string) {
+/** Live input: keep a trailing hyphen so users can type `team-payaman`. */
+export function sanitizeClubSlugInput(raw: string) {
   return raw
-    .trim()
     .toLowerCase()
     .replace(/[^a-z0-9-]+/g, "-")
     .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "");
+    .replace(/^-/, "");
+}
+
+/** Stored slug: collapse separators and strip leading/trailing hyphens. */
+export function normalizeClubSlug(raw: string) {
+  return sanitizeClubSlugInput(raw).replace(/-$/, "");
 }
 
 export function suggestClubSlugFromName(clubName: string) {

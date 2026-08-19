@@ -17,6 +17,7 @@ import { SAVE_QUICK_PLAY_POST_AUTH_PATH } from "@/lib/post-auth-redirect";
 import { safeRouterPush } from "@/lib/safe-router";
 import {
   normalizeClubSlug,
+  sanitizeClubSlugInput,
   suggestClubSlugFromName,
   validateClubSlug,
 } from "@/lib/club-signup-shared";
@@ -442,7 +443,7 @@ function ClubSignupForm({
                           setSlugTouched(true);
                           setNewClubForm((prev) => ({
                             ...prev,
-                            clubSlug: normalizeClubSlug(event.target.value),
+                            clubSlug: sanitizeClubSlugInput(event.target.value),
                           }));
                         }}
                       />
@@ -518,7 +519,7 @@ function ClubSignupForm({
                         onChange={(event) =>
                           setExistingClubForm((prev) => ({
                             ...prev,
-                            clubSlug: normalizeClubSlug(event.target.value),
+                            clubSlug: sanitizeClubSlugInput(event.target.value),
                           }))
                         }
                       />
