@@ -1,3 +1,5 @@
+import { Types } from "mongoose";
+
 import { isCloudinaryConfigured } from "@/lib/cloudinary";
 import type {
   InsightsPremiumRequestItem,
@@ -210,7 +212,7 @@ export async function reviewPremiumUpgradeRequest(input: {
   if (input.action === "approve") {
     doc.status = "approved";
     doc.reviewedAt = new Date();
-    doc.reviewedByUserId = input.reviewerUserId;
+    doc.reviewedByUserId = new Types.ObjectId(input.reviewerUserId);
     await doc.save();
     await User.findByIdAndUpdate(doc.userId, { $set: { isPremium: true } });
     return { message: "Premium access granted." };
@@ -222,7 +224,7 @@ export async function reviewPremiumUpgradeRequest(input: {
     }
     doc.status = "rejected";
     doc.reviewedAt = new Date();
-    doc.reviewedByUserId = input.reviewerUserId;
+    doc.reviewedByUserId = new Types.ObjectId(input.reviewerUserId);
     await doc.save();
     return { message: "Submission marked as not approved." };
   }
