@@ -30,6 +30,9 @@ import {
 } from "@/lib/match-history-display";
 import { filterMatchesByPlayerName } from "@/lib/match-history-filter";
 import { cn, formatPlayerDisplayName } from "@/lib/utils";
+import { type GamePayload } from "@/lib/game-payload-mutations";
+import { isQuickGame } from "@/lib/local-game-id";
+import { readOperatorGamePayload, writeOperatorGamePayload } from "@/lib/operator-game-cache";
 
 export type MatchHistoryPlayer = {
   _id?: string;
@@ -74,9 +77,9 @@ type GameMatchCachePayload = {
 
 /** Instant UI while the edit-score API request is in flight. */
 function applyEditMatchScoreOptimistic(
-  payload: GameMatchCachePayload,
+  payload: GamePayload,
   input: EditMatchScoreInput,
-): GameMatchCachePayload | null {
+): GamePayload | null {
   if (!payload.matches.some((match) => match._id === input.matchId)) return null;
 
   return {
@@ -86,6 +89,18 @@ function applyEditMatchScoreOptimistic(
         ? { ...match, teamAScore: input.teamAScore, teamBScore: input.teamBScore }
         : match,
     ),
+  };
+}
+
+function applyDeleteMatchOptimistic(
+  payload: GamePayload,
+  matchId: string,
+): GamePayload | null {
+  if (!payload.matches.some((match) => match._id === matchId)) return null;
+
+  return {
+    ...payload,
+    matches: payload.matches.filter((match) => match._id !== matchId),
   };
 }
 
@@ -224,7 +239,7 @@ export function MatchHistoryList({
   showNameFilter = false,
 }: {
   matches: MatchHistoryView[];
-  gameId?: string;
+  gameId: string;
   editable?: boolean;
   emptyMessage?: string;
   showNameFilter?: boolean;
@@ -259,8 +274,16 @@ export function MatchHistoryList({
     setEditTeamBScore("");
   };
 
+  const isQuickGameSession = isQuickGame(gameId);
+
   const editScoreMutation = useMutation({
     mutationFn: async (input: EditMatchScoreInput) => {
+      if(isQuickGameSession) {
+        return {
+          message: "Score updated."
+        }
+      }
+
       const response = await fetch(`/api/games/${gameId}/matches/${input.matchId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -274,27 +297,25 @@ export function MatchHistoryList({
       return data as { message: string };
     },
     onMutate: async (variables) => {
-      if (!gameId) return { previous: undefined as GameMatchCachePayload | undefined };
+      const previous = readOperatorGamePayload(queryClient, gameId);
+      if(previous) {
+        const optimistic = applyEditMatchScoreOptimistic(previous, variables);
+        if(optimistic) {
+          writeOperatorGamePayload(queryClient, gameId, optimistic);
+        }
+      }
 
-      const gameQueryKey = ["game", gameId, "operator"] as const;
-      await queryClient.cancelQueries({ queryKey: ["game", gameId] });
-      const previous = queryClient.getQueryData<GameMatchCachePayload>(gameQueryKey);
-      if (!previous) return { previous: undefined as GameMatchCachePayload | undefined };
-
-      const optimistic = applyEditMatchScoreOptimistic(previous, variables);
-      if (!optimistic) return { previous };
-
-      queryClient.setQueryData(gameQueryKey, optimistic);
       closeEditScore();
-      return { previous, gameQueryKey };
+      void queryClient.cancelQueries({ queryKey: ["game", gameId] });
+      return { previous };
     },
     onSuccess: (data) => {
       toast.success(data.message);
       if (gameId) queryClient.invalidateQueries({ queryKey: ["game", gameId] });
     },
     onError: (error, _variables, context) => {
-      if (context?.previous && context.gameQueryKey) {
-        queryClient.setQueryData(context.gameQueryKey, context.previous);
+      if (context?.previous) {
+        writeOperatorGamePayload(queryClient, gameId, context.previous);
       }
       toast.error(error instanceof Error ? error.message : "Failed to update score.");
     },
@@ -302,6 +323,12 @@ export function MatchHistoryList({
 
   const deleteMatchMutation = useMutation({
     mutationFn: async (matchId: string) => {
+      if(isQuickGameSession) {
+        return {
+          message: "Match deleted."
+        }
+      }
+
       const response = await fetch(`/api/games/${gameId}/matches/${matchId}`, {
         method: "DELETE",
       });
@@ -309,9 +336,27 @@ export function MatchHistoryList({
       if (!response.ok) throw new Error(data.message);
       return data as { message: string };
     },
+    onMutate: async (matchId) => {
+      const previous = readOperatorGamePayload(queryClient, gameId);
+      if(previous) {
+        const optimistic = applyDeleteMatchOptimistic(previous, matchId);
+        if(optimistic) {
+          writeOperatorGamePayload(queryClient, gameId, optimistic);
+        }
+      }
+
+      void queryClient.cancelQueries({ queryKey: ["game", gameId] });
+      return { previous };
+    },
     onSuccess: (data) => {
       toast.success(data.message);
       if (gameId) queryClient.invalidateQueries({ queryKey: ["game", gameId] });
+    },
+     onError: (error, _variables, context) => {
+      if (context?.previous) {
+        writeOperatorGamePayload(queryClient, gameId, context.previous);
+      }
+      toast.error(error instanceof Error ? error.message : "Failed to delete match.");
     },
   });
 
