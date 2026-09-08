@@ -87,3 +87,5 @@ Seed creates a demo owner account:
 ## Deploy
 
 Deploy directly on [Vercel](https://vercel.com/new) with your MongoDB connection string configured in project environment variables.
+
+#v2
