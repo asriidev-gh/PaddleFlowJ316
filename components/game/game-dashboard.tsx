@@ -2130,7 +2130,7 @@ export function GameDashboard({ mode = "operator", quickGameSurface }: GameDashb
   const spectatorMatchHistoryEmptyMessage = "No matches recorded for this session yet.";
 
   const quickGameHomeHref = isEphemeralQuickSession ? "/play" : "/";
-  const leaderboardHref = buildSpectatorLeaderboardHref(game.gameId);
+  const leaderboardHref = buildSpectatorLeaderboardHref(game.gameId, { isSpectator });
 
   const isCourtRematch = (court: CourtView) =>
     court.isRematch === true || rematchCourtNumbers.has(court.courtNumber);
