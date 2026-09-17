@@ -58,7 +58,8 @@ const oswald = Oswald({
 
 export const metadata: Metadata = {
   title: APP_NAME,
-  description: "Open-play queue and court flow manager.",
+  description:
+    "Less queue chaos. More time on court. Live queue, fair matchups, and leaderboards for pickleball open play.",
 };
 
 export default function RootLayout({

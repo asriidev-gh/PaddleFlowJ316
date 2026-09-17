@@ -21,7 +21,7 @@ export function DeveloperCreditLink({ className, marketingLight = false }: Devel
         className={cn(
           "cursor-pointer underline-offset-2 transition-colors hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
           marketingLight
-            ? "text-emerald-900/70 hover:text-emerald-950 focus-visible:ring-emerald-600 focus-visible:ring-offset-[#f6faf7]"
+            ? "text-[color:rgb(12_42_34/0.62)] hover:text-[var(--marketing-ink,#0c2a22)] focus-visible:ring-[var(--marketing-accent-deep,#2f8f2a)] focus-visible:ring-offset-[var(--marketing-bg,#f4f8f6)]"
             : "hover:text-foreground focus-visible:ring-ring focus-visible:ring-offset-background",
           className,
         )}
