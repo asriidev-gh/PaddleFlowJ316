@@ -7,6 +7,7 @@ import { PlayerNameWithPhoto, resolvePlayerId, type PlayerPhotoRef } from "@/com
 import { FirstTimerPill } from "@/components/game/leaderboard-standings";
 import { PlayerEndorsementStatusBadge } from "@/components/game/player-endorsement-status-badge";
 import { PlayerGenderPill } from "@/components/game/player-gender-pill";
+import { PlayerSkillLevelPill } from "@/components/game/player-skill-level-pill";
 import { QueuePlayerActionsMenu } from "@/components/game/queue-player-actions-menu";
 import { UndefeatedBadge } from "@/components/game/undefeated-badge";
 import { Badge } from "@/components/ui/badge";
@@ -151,6 +152,7 @@ function QueuePlayerLabel({
     <span className="inline-flex max-w-full flex-wrap items-center gap-1">
       <span className="min-w-0 truncate">{name}</span>
       <PlayerGenderPill gender={entry.playerId.gender} birthdate={entry.playerId.birthdate} />
+      <PlayerSkillLevelPill player={entry.playerId} />
       {entry.isFirstTimer ? <FirstTimerPill /> : null}
       {endorsementCount > 0 ? (
         <PlayerEndorsementStatusBadge count={endorsementCount} onClick={onEndorsementClick} />

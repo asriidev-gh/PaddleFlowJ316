@@ -13,6 +13,7 @@ import { NumberStepper } from "@/components/ui/number-stepper";
 import type { CourtView } from "@/components/game/court-card";
 import { PlayerAvatar, type PlayerPhotoRef } from "@/components/game/player-avatar";
 import { PlayerGenderPill } from "@/components/game/player-gender-pill";
+import { PlayerSkillLevelPill } from "@/components/game/player-skill-level-pill";
 import {
   getMatchScoreInputError,
   MAX_MATCH_SCORE,
@@ -64,6 +65,7 @@ function CourtWinnerPlayerRow({
           {formatPlayerDisplayName(displayPlayer.firstName, displayPlayer.lastName)}
         </span>
         <PlayerGenderPill gender={displayPlayer.gender} birthdate={displayPlayer.birthdate} />
+        <PlayerSkillLevelPill player={displayPlayer} />
       </span>
     </>
   );
@@ -241,6 +243,7 @@ export const CourtEndGameDialog = memo(function CourtEndGameDialog({
                       <span className="inline-flex items-center gap-1.5 font-medium">
                         {formatPlayerDisplayName(player.firstName, player.lastName)}
                         <PlayerGenderPill gender={player.gender} birthdate={player.birthdate} />
+                        <PlayerSkillLevelPill player={player} />
                       </span>
                     </li>
                   ))}

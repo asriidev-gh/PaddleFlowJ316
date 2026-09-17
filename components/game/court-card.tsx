@@ -10,6 +10,7 @@ import {
   type PlayerPhotoRef,
 } from "@/components/game/player-avatar";
 import { PlayerGenderPill } from "@/components/game/player-gender-pill";
+import { PlayerSkillLevelPill } from "@/components/game/player-skill-level-pill";
 import { PlayerEndorsementStatusBadge } from "@/components/game/player-endorsement-status-badge";
 import {
   formatSessionRecordLabel,
@@ -119,6 +120,7 @@ function TeamPlayers({
                       <span className="court-player-name--full">{courtName}</span>
                     </PlayerProfileTrigger>
                     <PlayerGenderPill gender={player.gender} birthdate={player.birthdate} />
+                    <PlayerSkillLevelPill player={player} />
                     {endorsementCount > 0 ? (
                       <PlayerEndorsementStatusBadge
                         count={endorsementCount}

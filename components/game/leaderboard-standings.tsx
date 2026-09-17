@@ -6,6 +6,7 @@ import { LeaderboardPodiumFrame } from "@/components/game/leaderboard-podium-fra
 import { SpectatorPlayerCardShareButton } from "@/components/game/spectator-player-card-share-button";
 import { PlayerEndorsementStatusBadge } from "@/components/game/player-endorsement-status-badge";
 import { PlayerAvatar, type PlayerPhotoRef } from "@/components/game/player-avatar";
+import { PlayerSkillLevelPill } from "@/components/game/player-skill-level-pill";
 import { UndefeatedBadge } from "@/components/game/undefeated-badge";
 import { isSessionUndefeated } from "@/lib/games-played-map";
 import { cn, formatPlayerDisplayName } from "@/lib/utils";
@@ -78,7 +79,10 @@ function LeaderboardPlayerName({
   const endorsementCount = endorsementCounts?.[playerId] ?? 0;
   const showUndefeated =
     !hideUndefeated && isSessionUndefeated({ wins: row.wins, losses: row.losses });
-  const hasPills = row.isFirstTimer || showUndefeated || endorsementCount > 0;
+  const hasSkillLevel = Boolean(
+    row.openPlayLevel?.trim() || row.pickleballLevel?.trim(),
+  );
+  const hasPills = row.isFirstTimer || showUndefeated || endorsementCount > 0 || hasSkillLevel;
   const stackMd = pillsOnOwnRowFrom === "md";
   const stackLg = pillsOnOwnRowFrom === "lg";
 
@@ -117,6 +121,7 @@ function LeaderboardPlayerName({
             stackLg && "lg:w-full lg:justify-center",
           )}
         >
+          <PlayerSkillLevelPill player={row} />
           {row.isFirstTimer ? <FirstTimerPill /> : null}
           {showUndefeated ? <UndefeatedBadge className="leaderboard-undefeated-badge" /> : null}
           {endorsementCount > 0 ? (

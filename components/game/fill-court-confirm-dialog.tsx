@@ -5,6 +5,7 @@ import { ArrowLeftRight, Loader2, Play, Shuffle, Volume2, VolumeX } from "lucide
 
 import type { QueueEntryView } from "@/components/game/queue-entry-row";
 import { PlayerGenderPill } from "@/components/game/player-gender-pill";
+import { PlayerSkillLevelPill } from "@/components/game/player-skill-level-pill";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useShuffleTeamsAnimation } from "@/hooks/use-shuffle-teams-animation";
@@ -95,6 +96,7 @@ const FillCourtPlayerRow = memo(function FillCourtPlayerRow({
       >
         <span className="min-w-0 truncate text-sm font-medium">{name}</span>
         <PlayerGenderPill gender={entry.playerId.gender} birthdate={entry.playerId.birthdate} />
+        <PlayerSkillLevelPill player={entry.playerId} />
       </span>
       <Button
         type="button"
