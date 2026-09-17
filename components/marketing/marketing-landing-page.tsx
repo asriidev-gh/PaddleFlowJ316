@@ -13,7 +13,7 @@ import { LandingLiveStats } from "@/components/marketing/landing-live-stats";
 import { MarketingLandingTheme } from "@/components/marketing/marketing-landing-theme";
 import { MarketingLandingWatchDemo } from "@/components/marketing/marketing-landing-watch-demo";
 import { buttonVariants } from "@/components/ui/button";
-import { APP_NAME } from "@/lib/app-config";
+import { APP_NAME, APP_VERSION } from "@/lib/app-config";
 import { cn } from "@/lib/utils";
 
 const NAV_LINKS = [
@@ -378,7 +378,8 @@ export function MarketingLandingPage() {
         <footer className="marketing-landing__footer">
           <div className="marketing-landing__container marketing-landing__footer-inner">
             <p suppressHydrationWarning>
-              © {new Date().getFullYear()} {APP_NAME}. Open-play queue & court flow.
+              © {new Date().getFullYear()} {APP_NAME} v{APP_VERSION}. Open-play queue & court
+              flow.
             </p>
             <DeveloperCreditLink marketingLight />
           </div>

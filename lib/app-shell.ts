@@ -20,7 +20,15 @@ export function getBrandShellClasses(pathname: string) {
     };
   }
 
-  if (pathname === "/" || pathname === "/my-games" || pathname.startsWith("/my-games/") || pathname === "/my-club" || pathname === "/marketplace" || pathname === "/premium" || pathname === "/play" || pathname.startsWith("/play/") || pathname === "/quick-game") {
+  // Setup pages use a narrow content column — keep the brand bar aligned with it.
+  if (pathname === "/play" || pathname === "/quick-game") {
+    return {
+      pad: "px-6 lg:px-10",
+      container: "max-w-3xl",
+    };
+  }
+
+  if (pathname === "/" || pathname === "/my-games" || pathname.startsWith("/my-games/") || pathname === "/my-club" || pathname === "/marketplace" || pathname === "/premium" || pathname.startsWith("/play/")) {
     return {
       pad: "px-6 lg:px-10",
       container: "max-w-7xl",
