@@ -70,6 +70,17 @@ export function getCourtElapsedMs(
   return getCourtEffectiveElapsedMs(timerClock, now);
 }
 
+/** True when effective play time has reached or exceeded the configured limit. */
+export function isCourtOverTimeLimit(
+  clock: CourtTimerClock,
+  limitMinutes: number | null | undefined,
+  now = Date.now(),
+) {
+  if (limitMinutes == null || limitMinutes <= 0) return false;
+  if (!clock.startedAt) return false;
+  return getCourtEffectiveElapsedMs(clock, now) >= limitMinutes * 60_000;
+}
+
 /** Live elapsed play time — e.g. 4:32 or 1:05:12 */
 export function formatCourtElapsedTime(elapsedMs: number) {
   const totalSec = Math.floor(elapsedMs / 1000);

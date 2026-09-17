@@ -11,8 +11,11 @@ import { Label } from "@/components/ui/label";
 import { NumberStepper } from "@/components/ui/number-stepper";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
+  DEFAULT_COURT_TIME_LIMIT_MINUTES,
   DEFAULT_PLAYER_OPEN_PLAY_LEVEL,
+  MAX_COURT_TIME_LIMIT_MINUTES,
   MAX_QUICK_PLAY_PLAYERS,
+  MIN_COURT_TIME_LIMIT_MINUTES,
   MIN_EXPECTED_PLAYERS,
   QUICK_PLAY_GAME_MODE_OPTIONS,
   getMinExpectedPlayersForGameMode,
@@ -308,6 +311,57 @@ export function QuickPlayFormatStep({
           buttonClassName={WIZARD_OUTLINE_BUTTON_BORDER}
           onChange={(expectedPlayers) => onFormChange({ expectedPlayers })}
         />
+      </div>
+
+      <div className={cn("space-y-3 rounded-xl border p-4", WIZARD_PANEL_BORDER)}>
+        <label
+          className={cn(
+            "flex cursor-pointer items-start gap-3 rounded-lg border px-4 py-3 transition-colors",
+            form.limitCourtTime
+              ? "border-primary/40 bg-primary/5"
+              : "border-border/70 bg-background/40",
+          )}
+        >
+          <Checkbox
+            checked={form.limitCourtTime}
+            onCheckedChange={(checked) =>
+              onFormChange({
+                limitCourtTime: checked === true,
+                courtTimeLimitMinutes:
+                  form.courtTimeLimitMinutes > 0
+                    ? form.courtTimeLimitMinutes
+                    : DEFAULT_COURT_TIME_LIMIT_MINUTES,
+              })
+            }
+            className="mt-0.5"
+          />
+          <span className="space-y-1 leading-snug">
+            <span className="block text-sm font-medium">Limit court time usage</span>
+            <span className="block text-xs text-muted-foreground">
+              When a court hits the max play time, its border blinks red so you can rotate
+              players.
+            </span>
+          </span>
+        </label>
+        {form.limitCourtTime ? (
+          <div className="space-y-2 pl-1">
+            <Label htmlFor={`${idPrefix}-court-time-limit`} className="text-sm">
+              Max time per court (minutes)
+            </Label>
+            <NumberStepper
+              id={`${idPrefix}-court-time-limit`}
+              min={MIN_COURT_TIME_LIMIT_MINUTES}
+              max={MAX_COURT_TIME_LIMIT_MINUTES}
+              value={form.courtTimeLimitMinutes}
+              inputClassName={WIZARD_PRIMARY_FIELD_BORDER}
+              buttonClassName={WIZARD_OUTLINE_BUTTON_BORDER}
+              onChange={(courtTimeLimitMinutes) => onFormChange({ courtTimeLimitMinutes })}
+            />
+            <p className="text-xs text-muted-foreground">
+              Enter max minutes a court can stay in play before the alert.
+            </p>
+          </div>
+        ) : null}
       </div>
     </div>
   );
@@ -763,6 +817,14 @@ export function QuickPlayPreviewStep({
           <QuickPlayPreviewDetailRow
             label={form.gameMode === "singles" ? "Queue matching" : "Matching type"}
             value={getQuickPlayQueueMatchingLabel(form.gameMode, form.matchingType)}
+          />
+          <QuickPlayPreviewDetailRow
+            label="Court time limit"
+            value={
+              form.limitCourtTime
+                ? `${form.courtTimeLimitMinutes} min per court`
+                : "Off"
+            }
           />
           <p className="pt-1 text-xs leading-relaxed text-muted-foreground">
             {getQuickPlayQueueMatchingDescription(form.gameMode, form.matchingType)}

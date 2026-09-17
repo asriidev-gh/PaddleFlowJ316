@@ -4,7 +4,7 @@ import { CircleDot, Loader2, Pause, Play, Users } from "lucide-react";
 
 import type { CourtView } from "@/components/game/court-card";
 import { CourtCancelAssignmentButton } from "@/components/game/court-cancel-assignment-button";
-import { CourtInPlayElapsedPanel } from "@/components/game/court-play-timer";
+import { CourtInPlayElapsedPanel, useCourtPlayTimer } from "@/components/game/court-play-timer";
 import { SinglesCourtLayout } from "@/components/singles/singles-court-layout";
 import { isCourtTimerPaused, toCourtTimerClock } from "@/lib/court-cancel-grace";
 import {
@@ -30,6 +30,7 @@ type SinglesCourtCardProps = {
   canFillCourt?: boolean;
   fillCourtPending?: boolean;
   onFillCourt?: () => void;
+  courtTimeLimitMinutes?: number | null;
 };
 
 export function SinglesCourtCard({
@@ -46,17 +47,25 @@ export function SinglesCourtCard({
   canFillCourt = false,
   fillCourtPending = false,
   onFillCourt,
+  courtTimeLimitMinutes = null,
 }: SinglesCourtCardProps) {
   const isActive = court.status === "active";
   const teamA = court.teamA?.playerIds ?? [];
   const teamB = court.teamB?.playerIds ?? [];
   const timerClock = toCourtTimerClock(court);
   const isPaused = isCourtTimerPaused(timerClock);
+  const { elapsedMs } = useCourtPlayTimer(timerClock);
+  const overTimeLimit =
+    isActive &&
+    courtTimeLimitMinutes != null &&
+    courtTimeLimitMinutes > 0 &&
+    elapsedMs >= courtTimeLimitMinutes * 60_000;
 
   return (
     <Card
-      className={`court-card overflow-hidden ${isActive ? "court-active" : "court-empty"}${isFilling ? " court-filling" : ""}${isClearing ? " court-clearing" : ""} court-card--pickleball`}
+      className={`court-card overflow-hidden ${isActive ? "court-active" : "court-empty"}${isFilling ? " court-filling" : ""}${isClearing ? " court-clearing" : ""} court-card--pickleball${overTimeLimit ? " court-over-time" : ""}`}
       data-court-status={court.status}
+      data-court-over-time={overTimeLimit ? "true" : undefined}
       aria-busy={isFilling || isClearing}
     >
       <CardHeader className="court-card-header flex flex-row items-start justify-between gap-2">
@@ -106,7 +115,7 @@ export function SinglesCourtCard({
                   onClick={onCancelAssignment}
                 />
               ) : null}
-              <CourtInPlayElapsedPanel clock={timerClock} />
+              <CourtInPlayElapsedPanel clock={timerClock} overTime={overTimeLimit} />
               <div className="grid grid-cols-2 gap-2">
                 {onTogglePause ? (
                   <Button

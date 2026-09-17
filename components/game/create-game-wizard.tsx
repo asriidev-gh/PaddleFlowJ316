@@ -45,6 +45,7 @@ import {
 import { defaultOpenPlayTitle, isFixedOpenPlayType, isMixedOpenPlayType } from "@/lib/open-play-types";
 import {
   createQuickPlayWizardPlayerEntry,
+  DEFAULT_COURT_TIME_LIMIT_MINUTES,
   DEFAULT_PLAYER_OPEN_PLAY_LEVEL,
   MAX_QUICK_PLAY_PLAYERS,
   MIN_EXPECTED_PLAYERS,
@@ -102,6 +103,8 @@ type CreateGameForm = {
   strictPlayerCount: boolean;
   gameMode: QuickPlayGameMode;
   matchingType: QuickPlayMatchingType;
+  limitCourtTime: boolean;
+  courtTimeLimitMinutes: number;
 };
 
 function createInitialForm(userType?: string | null): CreateGameForm {
@@ -123,6 +126,8 @@ function createInitialForm(userType?: string | null): CreateGameForm {
     strictPlayerCount: false,
     gameMode: "doubles",
     matchingType: "auto-balanced",
+    limitCourtTime: false,
+    courtTimeLimitMinutes: DEFAULT_COURT_TIME_LIMIT_MINUTES,
   };
 }
 
@@ -554,6 +559,7 @@ export function CreateGameWizard() {
           checkInAllPlayers: defaultCheckInAllPlayers,
           gameMode: form.gameMode,
           matchingType: form.matchingType,
+          courtTimeLimitMinutes: form.limitCourtTime ? form.courtTimeLimitMinutes : null,
         });
         initializeQuickGameSession(gameId, session);
         seedLocalGameOperatorCache(queryClient, gameId);

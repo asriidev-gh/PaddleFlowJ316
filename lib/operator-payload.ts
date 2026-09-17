@@ -29,6 +29,11 @@ export type OperatorGameSummary = {
   matchingType?: "auto-balanced" | "winner-loser-groups" | "mixed-doubles";
   expectedPlayers?: number;
   strictPlayerCount?: boolean;
+  /**
+   * Optional max play time per court in minutes. When set, courts that exceed
+   * this elapsed time (excluding pause) blink to alert the queue manager.
+   */
+  courtTimeLimitMinutes?: number | null;
   registerUrl?: string;
   publicQrCodeDataUrl?: string;
 };

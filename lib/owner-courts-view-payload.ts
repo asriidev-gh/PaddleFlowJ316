@@ -18,6 +18,8 @@ export type OwnerCourtsViewSession = {
   queue: QueueEntryView[];
   checkedOut?: QueueEntryView[];
   leaderboard: LeaderboardGamesPlayedRow[];
+  /** Max play minutes per court when court time limit is enabled. */
+  courtTimeLimitMinutes?: number | null;
 };
 
 export type OwnerCourtsViewPayload = {

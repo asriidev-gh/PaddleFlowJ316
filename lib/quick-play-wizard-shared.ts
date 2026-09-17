@@ -96,12 +96,19 @@ export type QuickPlayWizardFormFields = {
   expectedPlayers: number;
   gameMode: QuickPlayGameMode;
   matchingType: QuickPlayMatchingType;
+  /** When true, courts warn after {@link courtTimeLimitMinutes}. */
+  limitCourtTime: boolean;
+  /** Max play time per court in minutes (used when limitCourtTime is on). */
+  courtTimeLimitMinutes: number;
 };
 
 export const DEFAULT_PLAYER_OPEN_PLAY_LEVEL: PlayerOpenPlayLevel = "Beginner";
 export const MIN_EXPECTED_PLAYERS = 4;
 export const MAX_QUICK_PLAY_PLAYERS = 40;
 export const MAX_QUICK_PLAY_COURTS = 20;
+export const DEFAULT_COURT_TIME_LIMIT_MINUTES = 15;
+export const MIN_COURT_TIME_LIMIT_MINUTES = 5;
+export const MAX_COURT_TIME_LIMIT_MINUTES = 180;
 
 export function getMinExpectedPlayersForGameMode(gameMode: QuickPlayGameMode) {
   return gameMode === "singles" ? 2 : MIN_EXPECTED_PLAYERS;

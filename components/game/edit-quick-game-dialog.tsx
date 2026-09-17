@@ -37,6 +37,12 @@ import {
   validateOpenPlayTimeOrder,
   type OpenPlayMeridiem,
 } from "@/lib/open-play-time-range";
+import {
+  DEFAULT_COURT_TIME_LIMIT_MINUTES,
+  MAX_COURT_TIME_LIMIT_MINUTES,
+  MIN_COURT_TIME_LIMIT_MINUTES,
+} from "@/lib/quick-play-wizard-shared";
+import { cn } from "@/lib/utils";
 import { defaultOpenPlayTitle, resolveStoredOpenPlayType } from "@/lib/open-play-types";
 import {
   GENDER_OPTIONS,
@@ -98,6 +104,10 @@ export function EditQuickGameDialog({
   const [venueMapDialogOpen, setVenueMapDialogOpen] = useState(false);
   const [courtCount, setCourtCount] = useState(2);
   const [allowManualPlayerAdd, setAllowManualPlayerAdd] = useState(false);
+  const [limitCourtTime, setLimitCourtTime] = useState(false);
+  const [courtTimeLimitMinutes, setCourtTimeLimitMinutes] = useState(
+    DEFAULT_COURT_TIME_LIMIT_MINUTES,
+  );
   const [checkInAllPlayers, setCheckInAllPlayers] = useState(true);
   const [playerEntries, setPlayerEntries] = useState<WizardPlayerEntry[]>([EMPTY_PLAYER]);
   const [timeRangeError, setTimeRangeError] = useState("");
@@ -153,6 +163,10 @@ export function EditQuickGameDialog({
         setVenueGoogleMapEmbedUrl(loaded.game.venueGoogleMapEmbedUrl ?? "");
         setCourtCount(loaded.game.courtCount);
         setAllowManualPlayerAdd(loaded.game.allowManualPlayerAdd === true);
+        const savedLimit = loaded.game.courtTimeLimitMinutes;
+        const hasLimit = savedLimit != null && savedLimit > 0;
+        setLimitCourtTime(hasLimit);
+        setCourtTimeLimitMinutes(hasLimit ? savedLimit : DEFAULT_COURT_TIME_LIMIT_MINUTES);
         setCheckInAllPlayers((loaded.checkedOut?.length ?? 0) === 0);
 
         const roster = extractQuickGamePlayerRoster(loaded);
@@ -263,6 +277,8 @@ export function EditQuickGameDialog({
     const trimmedVenueAddress = venueAddress.trim();
     const trimmedVenueMapEmbedUrl = venueGoogleMapEmbedUrl.trim();
 
+    const courtTimeLimitValue = limitCourtTime ? courtTimeLimitMinutes : null;
+
     try {
       setLoading(true);
 
@@ -281,6 +297,7 @@ export function EditQuickGameDialog({
             allowManualCourtAdd: payload.game.allowManualCourtAdd === true,
             players,
             checkInAllPlayers,
+            courtTimeLimitMinutes: courtTimeLimitValue,
           })
         : patchQuickGameMetadata(payload, {
             title: sessionTitle.trim(),
@@ -293,6 +310,7 @@ export function EditQuickGameDialog({
             courtCount: payload.game.courtCount,
             allowManualPlayerAdd,
             allowManualCourtAdd: payload.game.allowManualCourtAdd === true,
+            courtTimeLimitMinutes: courtTimeLimitValue,
           });
 
       writeQuickGamePayload(gameId, nextPayload);
@@ -579,6 +597,50 @@ export function EditQuickGameDialog({
                   <span className="block text-sm font-medium">Allow new users to be added manually</span>
                 </span>
               </label>
+
+              <div className="space-y-3 rounded-xl border border-border bg-muted/20 p-4">
+                <label
+                  className={cn(
+                    "flex cursor-pointer items-start gap-3 rounded-lg border px-4 py-3 transition-colors",
+                    limitCourtTime
+                      ? "border-primary/40 bg-primary/5"
+                      : "border-border/70 bg-background/40",
+                  )}
+                >
+                  <Checkbox
+                    checked={limitCourtTime}
+                    onCheckedChange={(checked) => {
+                      const enabled = checked === true;
+                      setLimitCourtTime(enabled);
+                      if (enabled && courtTimeLimitMinutes <= 0) {
+                        setCourtTimeLimitMinutes(DEFAULT_COURT_TIME_LIMIT_MINUTES);
+                      }
+                    }}
+                    className="mt-0.5"
+                  />
+                  <span className="space-y-1 leading-snug">
+                    <span className="block text-sm font-medium">Limit court time usage</span>
+                    <span className="block text-xs text-muted-foreground">
+                      When a court hits the max play time, its border blinks red so you can rotate
+                      players.
+                    </span>
+                  </span>
+                </label>
+                {limitCourtTime ? (
+                  <div className="space-y-2 pl-1">
+                    <Label htmlFor="quick-edit-court-time-limit" className="text-sm">
+                      Max time per court (minutes)
+                    </Label>
+                    <NumberStepper
+                      id="quick-edit-court-time-limit"
+                      min={MIN_COURT_TIME_LIMIT_MINUTES}
+                      max={MAX_COURT_TIME_LIMIT_MINUTES}
+                      value={courtTimeLimitMinutes}
+                      onChange={setCourtTimeLimitMinutes}
+                    />
+                  </div>
+                ) : null}
+              </div>
             </div>
           )}
         </div>

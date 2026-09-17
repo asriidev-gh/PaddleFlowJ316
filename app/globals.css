@@ -3422,6 +3422,36 @@
     @apply border-2 border-emerald-500/55 bg-emerald-500/8 shadow-[0_0_28px_rgba(34,197,94,0.12)];
   }
 
+  @keyframes court-over-time-blink {
+    0%,
+    100% {
+      border-color: rgb(239 68 68 / 0.95);
+      box-shadow:
+        0 0 0 2px rgb(239 68 68 / 0.45),
+        0 0 28px rgb(239 68 68 / 0.35);
+    }
+
+    50% {
+      border-color: rgb(239 68 68 / 0.35);
+      box-shadow:
+        0 0 0 1px rgb(239 68 68 / 0.2),
+        0 0 10px rgb(239 68 68 / 0.12);
+    }
+  }
+
+  .court-card.court-over-time {
+    border-width: 2px;
+    animation: court-over-time-blink 0.9s ease-in-out infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .court-card.court-over-time {
+      animation: none;
+      border-color: rgb(239 68 68 / 0.9);
+      box-shadow: 0 0 0 2px rgb(239 68 68 / 0.4);
+    }
+  }
+
   .court-badge-empty {
     @apply border-border bg-muted/80 text-muted-foreground;
   }

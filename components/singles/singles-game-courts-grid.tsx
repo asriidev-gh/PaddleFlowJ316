@@ -39,6 +39,7 @@ type SinglesGameCourtsGridProps = {
   layout?: CourtsViewLayout;
   showPlayerPhotos?: boolean;
   courtTheme?: CourtsViewCourtTheme;
+  courtTimeLimitMinutes?: number | null;
   getCourtCardProps?: (court: CourtView) => SinglesCourtCardProps;
 };
 
@@ -54,6 +55,7 @@ export function SinglesGameCourtsGrid({
   layout = defaultCourtsViewLayout(),
   showPlayerPhotos = defaultCourtsViewShowPhotos(),
   courtTheme = "classic",
+  courtTimeLimitMinutes = null,
   getCourtCardProps,
 }: SinglesGameCourtsGridProps) {
   const playerSessionStats =
@@ -95,6 +97,7 @@ export function SinglesGameCourtsGrid({
               playerSessionStats={playerSessionStats}
               playerLeaderboardRanks={playerLeaderboardRanks}
               {...operatorProps}
+              courtTimeLimitMinutes={courtTimeLimitMinutes}
             />
           );
         })}

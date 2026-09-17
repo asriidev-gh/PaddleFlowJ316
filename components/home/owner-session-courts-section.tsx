@@ -364,6 +364,9 @@ export function OwnerSessionCourtsSection({
         showPlayerPhotos={sessionShowPlayerPhotos}
         layoutVariant="pickleball"
         courtTheme={courtTheme}
+        courtTimeLimitMinutes={
+          localPayload?.game.courtTimeLimitMinutes ?? session.courtTimeLimitMinutes ?? null
+        }
         showLeaderboardRank
         summaryAddon={
           <SpectatorNextOnQueueButton

@@ -41,6 +41,7 @@ import {
 } from "@/lib/quick-game-store";
 import { trackEphemeralQuickPlayUsage } from "@/lib/track-ephemeral-quick-play-usage";
 import {
+  DEFAULT_COURT_TIME_LIMIT_MINUTES,
   DEFAULT_PLAYER_OPEN_PLAY_LEVEL,
   MAX_QUICK_PLAY_PLAYERS,
   MIN_EXPECTED_PLAYERS,
@@ -70,6 +71,8 @@ function createInitialForm(): QuickPlayWizardFormFields {
     expectedPlayers: MIN_EXPECTED_PLAYERS,
     gameMode: "doubles",
     matchingType: "auto-balanced",
+    limitCourtTime: false,
+    courtTimeLimitMinutes: DEFAULT_COURT_TIME_LIMIT_MINUTES,
   };
 }
 
@@ -271,6 +274,7 @@ export function QuickPlaySetup() {
         checkInAllPlayers: defaultCheckInAllPlayers,
         gameMode: form.gameMode,
         matchingType: form.matchingType,
+        courtTimeLimitMinutes: form.limitCourtTime ? form.courtTimeLimitMinutes : null,
       });
 
       replaceEphemeralQuickGameSession(gameId, session);

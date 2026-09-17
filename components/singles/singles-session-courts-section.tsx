@@ -246,6 +246,9 @@ export function SinglesSessionCourtsSection({
             layout={layout}
             showPlayerPhotos={sessionShowPlayerPhotos}
             courtTheme={courtTheme}
+            courtTimeLimitMinutes={
+              localPayload?.game.courtTimeLimitMinutes ?? session.courtTimeLimitMinutes ?? null
+            }
             summaryAddon={
               <SpectatorNextOnQueueButton
                 queue={queueWithStats}
