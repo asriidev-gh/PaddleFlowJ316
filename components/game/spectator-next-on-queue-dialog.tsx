@@ -234,8 +234,8 @@ export function SpectatorNextOnQueueButton({
       </Button>
 
       <Dialog open={open} onOpenChange={handleOpenChange}>
-        <DialogContent className="max-h-[85vh] max-w-lg overflow-y-auto sm:max-w-xl">
-          <DialogHeader>
+        <DialogContent className="spectator-next-on-queue-dialog flex max-h-[min(85dvh,40rem)] w-full max-w-lg flex-col gap-3 overflow-hidden p-4 sm:max-w-xl">
+          <DialogHeader className="shrink-0 pr-8">
             <DialogTitle>Next on queue</DialogTitle>
             <DialogDescription>
               {count === 0
@@ -246,68 +246,73 @@ export function SpectatorNextOnQueueButton({
             </DialogDescription>
           </DialogHeader>
 
-          {count === 0 ? (
-            <p className="py-4 text-sm text-muted-foreground">The queue is empty.</p>
-          ) : (
-            <div className="queue-next-up-group">
-              <div className="queue-next-up-banner">
-                <div className="queue-next-up-banner__header">
-                  <span className="queue-next-up-icon" aria-hidden>
-                    <Zap className="h-4 w-4" />
-                  </span>
-                  <div className="queue-next-up-banner__heading">
-                    <p className="queue-next-up-title">Next on court</p>
-                    {queueSubtitle ? (
-                      <p className="queue-next-up-subtitle caption">{queueSubtitle}</p>
-                    ) : null}
+          <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
+            {count === 0 ? (
+              <p className="py-4 text-sm text-muted-foreground">The queue is empty.</p>
+            ) : (
+              <div className="queue-next-up-group">
+                <div className="queue-next-up-banner">
+                  <div className="queue-next-up-banner__header">
+                    <span className="queue-next-up-icon" aria-hidden>
+                      <Zap className="h-4 w-4" />
+                    </span>
+                    <div className="queue-next-up-banner__heading">
+                      <p className="queue-next-up-title">Next on court</p>
+                      {queueSubtitle ? (
+                        <p className="queue-next-up-subtitle caption">{queueSubtitle}</p>
+                      ) : null}
+                    </div>
+                    <Badge className="badge-next-up-count shrink-0 self-start sm:self-center">
+                      {count} / {courtPlayerCount}
+                    </Badge>
                   </div>
-                  <Badge className="badge-next-up-count shrink-0 self-start sm:self-center">
-                    {count} / {courtPlayerCount}
-                  </Badge>
                 </div>
-              </div>
-              {showNextCourtAnalysis ? (
-                <NextCourtMatchAnalysis
-                  foursome={nextUp}
-                  queue={analysisQueue}
-                  matchingType={matchingType}
-                  matches={matches}
-                  matchesLoading={
-                    shouldLoadMatchHistory &&
-                    operatorMatchHistoryQuery.isLoading &&
-                    !operatorMatchHistoryQuery.data
-                  }
-                  onShuffle={onShuffleNext}
-                  shufflePending={shuffleNextPending}
-                  onSwapWaiting={onSwapWaiting}
-                  swapWaitingPending={swapWaitingPending}
-                  maxVisible={2}
-                />
-              ) : null}
-              <QueueNextUpSlots
-                entries={nextUp}
-                showDoublesTeamPreview={isDoubles}
-                renderEntry={(entry, index) => (
-                  <QueueEntryRow
-                    key={entry._id}
-                    entry={entry}
-                    index={index}
-                    isNextUp
-                    hideReplacePanel
-                    onReplace={() => {}}
-                    replacePending={false}
-                    showLeaderboardRank={showLeaderboardRank}
-                    leaderboardRankMap={leaderboardRankMap}
+                {showNextCourtAnalysis ? (
+                  <NextCourtMatchAnalysis
+                    foursome={nextUp}
+                    queue={analysisQueue}
+                    matchingType={matchingType}
+                    matches={matches}
+                    matchesLoading={
+                      shouldLoadMatchHistory &&
+                      operatorMatchHistoryQuery.isLoading &&
+                      !operatorMatchHistoryQuery.data
+                    }
+                    onShuffle={onShuffleNext}
+                    shufflePending={shuffleNextPending}
+                    onSwapWaiting={onSwapWaiting}
+                    swapWaitingPending={swapWaitingPending}
+                    maxVisible={2}
                   />
-                )}
-              />
-            </div>
-          )}
+                ) : null}
+                <QueueNextUpSlots
+                  entries={nextUp}
+                  showDoublesTeamPreview={isDoubles}
+                  stacked
+                  compactName
+                  renderEntry={(entry, index, options) => (
+                    <QueueEntryRow
+                      key={entry._id}
+                      entry={entry}
+                      index={index}
+                      isNextUp
+                      hideReplacePanel
+                      compactName={options?.compactName}
+                      onReplace={() => {}}
+                      replacePending={false}
+                      showLeaderboardRank={showLeaderboardRank}
+                      leaderboardRankMap={leaderboardRankMap}
+                    />
+                  )}
+                />
+              </div>
+            )}
+          </div>
 
           {showFooter ? (
             <DialogFooter
               className={cn(
-                "!mx-0 !mb-0 mt-4 shrink-0 !flex-row items-center gap-2 border-t border-border bg-muted/30 px-0 pt-4 sm:gap-3",
+                "!mx-0 !mb-0 shrink-0 !flex-row items-center gap-2 border-t border-border bg-muted/30 px-0 pt-4 sm:gap-3",
                 showCallNames && showFillNextCourt ? "justify-between" : "justify-start",
               )}
             >

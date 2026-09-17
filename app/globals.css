@@ -2141,6 +2141,19 @@
     @apply flex flex-col gap-1.5 xl:flex-row xl:items-stretch xl:gap-2;
   }
 
+  /* Narrow hosts (dialogs): never side-by-side — viewport xl is wider than the panel. */
+  .queue-next-up-matchup--stacked .queue-next-up-matchup__teams {
+    @apply flex-col xl:flex-col;
+  }
+
+  .queue-next-up-matchup--stacked .queue-next-up-vs {
+    @apply w-auto flex-row gap-2 py-0.5 xl:w-auto xl:flex-row xl:gap-2 xl:py-0.5;
+  }
+
+  .queue-next-up-matchup--stacked .queue-next-up-vs__rule {
+    @apply h-px w-auto flex-1 self-auto xl:h-px xl:w-auto xl:flex-1 xl:self-auto;
+  }
+
   .queue-next-up-team {
     @apply flex min-w-0 flex-1 flex-col gap-1 rounded-lg border border-border/60 bg-muted/15 p-1.5;
   }
@@ -2163,6 +2176,42 @@
 
   .queue-next-up-vs__puck {
     @apply flex h-7 min-w-[2.35rem] shrink-0 items-center justify-center rounded-full border border-border bg-background px-2 text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground shadow-sm;
+  }
+
+  /* Court View / spectator dialog: keep next-up rows dense regardless of viewport xl. */
+  .spectator-next-on-queue-dialog .queue-next-up-group {
+    @apply gap-1.5 border p-2 shadow-[0_0_16px_rgba(250,204,21,0.08)];
+  }
+
+  .spectator-next-on-queue-dialog .queue-next-up-banner {
+    @apply rounded-md px-2 py-1.5;
+  }
+
+  .spectator-next-on-queue-dialog .queue-next-up-title {
+    @apply text-xs font-semibold;
+  }
+
+  .spectator-next-on-queue-dialog .queue-next-up--compact {
+    @apply rounded-lg p-2;
+  }
+
+  .spectator-next-on-queue-dialog .queue-next-up .queue-rank {
+    @apply h-7 w-7 text-xs;
+  }
+
+  .spectator-next-on-queue-dialog .queue-next-up .player-identity .player-avatar {
+    width: 2rem !important;
+    height: 2rem !important;
+    min-width: 2rem;
+    min-height: 2rem;
+  }
+
+  .spectator-next-on-queue-dialog .queue-next-up .queue-entry-meta--next-up {
+    @apply mt-1 hidden;
+  }
+
+  .spectator-next-on-queue-dialog .queue-next-up .badge-next-up {
+    @apply hidden;
   }
 
   .queue-next-up-matchup .queue-next-up-team--a .queue-item {
