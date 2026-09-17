@@ -1,8 +1,12 @@
 export function buildSpectatorLeaderboardHref(
   gameId: string,
-  options?: { returnGameId?: string },
+  options?: { returnGameId?: string, isSpectator?: boolean },
 ) {
-  const params = new URLSearchParams({ from: "spectator" });
+  const params = new URLSearchParams();
+  if(options?.isSpectator) {
+    params.set("from", "spectator")
+  }
+
   const returnGameId = options?.returnGameId?.trim();
   if (returnGameId) {
     params.set("returnGame", returnGameId);
