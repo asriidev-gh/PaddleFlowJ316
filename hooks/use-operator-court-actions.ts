@@ -37,6 +37,7 @@ import {
   readOperatorGamePayload,
   writeOperatorGamePayload,
 } from "@/lib/operator-game-cache";
+import { announceCourtEnded } from "@/lib/call-names-speech";
 
 type UseOperatorCourtActionsOptions = {
   gameId: string;
@@ -176,15 +177,6 @@ export function useOperatorCourtActions({
       rematch: boolean;
     }) => {
       if (isLocalGame) {
-        applyLocalGameMutation(
-          queryClient,
-          gameId,
-          (payload) =>
-            input.rematch
-              ? applyEndGameOptimistic(payload, input)
-              : applyEndGameWithHistoryOptimistic(payload, input),
-          "Failed to end game.",
-        );
         return {
           message: input.rematch
             ? `Court ${input.courtNumber} rematch started — same players, fresh clock.`
@@ -203,13 +195,13 @@ export function useOperatorCourtActions({
       return data as { message?: string; rematch?: boolean };
     },
     onMutate: (variables) => {
-      if (isLocalGame) return {};
-
-      const previous = readCachedGamePayload();
+      const previous = readOperatorGamePayload(queryClient, gameId);
       if (previous) {
-        const optimistic = applyEndGameOptimistic(previous, variables);
+        const optimistic = isLocalGame
+          ? applyEndGameWithHistoryOptimistic(previous, variables)
+          : applyEndGameOptimistic(previous, variables);
         if (optimistic) {
-          writeCachedGamePayload(optimistic);
+          writeOperatorGamePayload(queryClient, gameId, optimistic);
         }
       }
 
@@ -227,8 +219,9 @@ export function useOperatorCourtActions({
       void queryClient.cancelQueries({ queryKey: invalidateQueryKey });
       return { previous, previousRematchCourtNumbers };
     },
-    onSuccess: (data) => {
+    onSuccess: (data, variables) => {
       toast.success(data.message ?? "Court updated.");
+      void announceCourtEnded(variables.courtNumber);
     },
     onSettled: () => {
       syncAfterMutation();
