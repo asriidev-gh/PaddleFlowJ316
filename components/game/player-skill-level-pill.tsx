@@ -60,7 +60,12 @@ export function PlayerSkillLevelPill({
   className?: string;
 }) {
   const label = resolveSpectatorPlayerSkillLevelLabel(
-    player ?? { firstName: "", lastName: "", openPlayLevel, pickleballLevel },
+    player ?? {
+      firstName: "",
+      lastName: "",
+      openPlayLevel: openPlayLevel ?? undefined,
+      pickleballLevel: pickleballLevel ?? undefined,
+    },
   );
   if (!label) return null;
 
