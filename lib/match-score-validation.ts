@@ -3,6 +3,8 @@ export const MAX_MATCH_SCORE = 99;
 export const LOSER_SCORE_TOO_HIGH_MESSAGE =
   "Loser score must be less than the winner score.";
 
+export const TIE_SCORE_MESSAGE = "Scores cannot be tied — one team must have more points.";
+
 export const SCORE_OUT_OF_RANGE_MESSAGE = "Scores must be between 0 and 99.";
 
 /** Keep at most two numeric digits (0–99) while typing. */
@@ -29,6 +31,15 @@ export function loserScoreExceedsWinner(
   const winnerScore = winnerTeam === "A" ? teamAScore : teamBScore;
   const loserScore = winnerTeam === "A" ? teamBScore : teamAScore;
   return loserScore >= winnerScore;
+}
+
+/** Winner is whoever scored more. Returns null for ties. */
+export function resolveWinnerTeamFromScores(
+  teamAScore: number,
+  teamBScore: number,
+): "A" | "B" | null {
+  if (teamAScore === teamBScore) return null;
+  return teamAScore > teamBScore ? "A" : "B";
 }
 
 function parseScoreField(raw: string): number | null {
@@ -63,6 +74,31 @@ export function getMatchScoreInputError(
 
   if (loserScoreExceedsWinner(winnerTeam, teamAScore, teamBScore)) {
     return LOSER_SCORE_TOO_HIGH_MESSAGE;
+  }
+
+  return null;
+}
+
+/**
+ * Edit-score validation: winner follows the higher score.
+ * Ties are invalid; labels/API should use {@link resolveWinnerTeamFromScores}.
+ */
+export function getEditMatchScoreInputError(
+  teamAScoreRaw: string,
+  teamBScoreRaw: string,
+): string | null {
+  const aTrim = teamAScoreRaw.trim();
+  const bTrim = teamBScoreRaw.trim();
+  if (aTrim === "" && bTrim === "") return null;
+
+  const teamAScore = parseScoreField(teamAScoreRaw);
+  const teamBScore = parseScoreField(teamBScoreRaw);
+  if (teamAScore === null || teamBScore === null) {
+    return SCORE_OUT_OF_RANGE_MESSAGE;
+  }
+
+  if (resolveWinnerTeamFromScores(teamAScore, teamBScore) === null) {
+    return TIE_SCORE_MESSAGE;
   }
 
   return null;

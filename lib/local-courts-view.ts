@@ -18,6 +18,7 @@ export function operatorPayloadToCourtsViewSession(
     queue: payload.queue,
     checkedOut: payload.checkedOut ?? [],
     leaderboard: payload.leaderboard ?? [],
+    courtTimeLimitMinutes: payload.game.courtTimeLimitMinutes ?? null,
   };
 }
 

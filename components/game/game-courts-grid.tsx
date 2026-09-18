@@ -39,6 +39,8 @@ type GameCourtsGridProps = {
   showPlayerPhotos?: boolean;
   layoutVariant?: "standard" | "pickleball";
   courtTheme?: CourtsViewCourtTheme;
+  /** Max play minutes per court; blinks when exceeded. */
+  courtTimeLimitMinutes?: number | null;
   getCourtCardProps?: (court: CourtView) => CourtCardOperatorProps;
 };
 
@@ -55,6 +57,7 @@ export function GameCourtsGrid({
   showPlayerPhotos = defaultCourtsViewShowPhotos(),
   layoutVariant = "standard",
   courtTheme = "classic",
+  courtTimeLimitMinutes = null,
   getCourtCardProps,
 }: GameCourtsGridProps) {
   const playerSessionStats =
@@ -104,6 +107,7 @@ export function GameCourtsGrid({
               playerLeaderboardRanks={playerLeaderboardRanks}
               layoutVariant={layoutVariant}
               {...operatorProps}
+              courtTimeLimitMinutes={courtTimeLimitMinutes}
             />
           );
         })}

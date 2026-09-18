@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -41,6 +40,7 @@ import {
 } from "@/lib/quick-game-store";
 import { trackEphemeralQuickPlayUsage } from "@/lib/track-ephemeral-quick-play-usage";
 import {
+  DEFAULT_COURT_TIME_LIMIT_MINUTES,
   DEFAULT_PLAYER_OPEN_PLAY_LEVEL,
   MAX_QUICK_PLAY_PLAYERS,
   MIN_EXPECTED_PLAYERS,
@@ -70,6 +70,8 @@ function createInitialForm(): QuickPlayWizardFormFields {
     expectedPlayers: MIN_EXPECTED_PLAYERS,
     gameMode: "doubles",
     matchingType: "auto-balanced",
+    limitCourtTime: false,
+    courtTimeLimitMinutes: DEFAULT_COURT_TIME_LIMIT_MINUTES,
   };
 }
 
@@ -271,6 +273,7 @@ export function QuickPlaySetup() {
         checkInAllPlayers: defaultCheckInAllPlayers,
         gameMode: form.gameMode,
         matchingType: form.matchingType,
+        courtTimeLimitMinutes: form.limitCourtTime ? form.courtTimeLimitMinutes : null,
       });
 
       replaceEphemeralQuickGameSession(gameId, session);
@@ -388,23 +391,22 @@ export function QuickPlaySetup() {
         />
       ) : null}
 
-      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
-        <div className="flex gap-2">
-          {step > 1 ? (
-            <Button
-              type="button"
-              variant="outline"
-              className={WIZARD_OUTLINE_BUTTON_BORDER}
-              onClick={() => setStep((prev) => prev - 1)}
-            >
-              Back
-            </Button>
-          ) : (
-            <Button variant="ghost" nativeButton={false} render={<Link href="/login" />}>
-              Sign in to save sessions
-            </Button>
-          )}
-        </div>
+      <div
+        className={cn(
+          "flex flex-wrap items-center gap-3 border-t border-border pt-4",
+          step > 1 ? "justify-between" : "justify-end",
+        )}
+      >
+        {step > 1 ? (
+          <Button
+            type="button"
+            variant="outline"
+            className={WIZARD_OUTLINE_BUTTON_BORDER}
+            onClick={() => setStep((prev) => prev - 1)}
+          >
+            Back
+          </Button>
+        ) : null}
         <div className="flex gap-2">
           {step < QUICK_PLAY_TOTAL_STEPS ? (
             <Button type="button" disabled={step === 1 && hasActiveSession} onClick={goNext}>

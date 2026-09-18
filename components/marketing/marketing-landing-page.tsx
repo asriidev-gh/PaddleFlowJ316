@@ -3,6 +3,7 @@ import {
   LayoutGrid,
   QrCode,
   Shuffle,
+  Trophy,
   Users,
 } from "lucide-react";
 
@@ -12,58 +13,135 @@ import { LandingLiveStats } from "@/components/marketing/landing-live-stats";
 import { MarketingLandingTheme } from "@/components/marketing/marketing-landing-theme";
 import { MarketingLandingWatchDemo } from "@/components/marketing/marketing-landing-watch-demo";
 import { buttonVariants } from "@/components/ui/button";
-import { APP_NAME } from "@/lib/app-config";
+import { APP_NAME, APP_VERSION } from "@/lib/app-config";
 import { cn } from "@/lib/utils";
 
-const PAIN_POINTS = [
-  {
-    side: "organizer" as const,
-    title: "On the organizer side",
-    items: [
-      "Players ask “who’s up next?” every few minutes while you’re trying to run courts",
-      "Paper lists and group chats drift out of sync when someone checks out early",
-      "Pairing the same foursome again and again because there’s no match history at hand",
-      "No shared leaderboard — winners and court order turn into debates",
-    ],
-  },
-  {
-    side: "player" as const,
-    title: "On the player side",
-    items: [
-      "Unclear wait time and no visibility into who’s on deck",
-      "Registration at the door slows down the first games of the night",
-      "Hard to track personal stats across a busy open-play session",
-      "Spectators can’t follow court action without hovering at the tablet",
-    ],
-  },
-];
+const NAV_LINKS = [
+  { href: "#features", label: "Features" },
+  { href: "#how-it-works", label: "How it works" },
+  { href: "#reviews", label: "Reviews" },
+  { href: "#faq", label: "FAQ" },
+] as const;
 
 const FEATURES = [
   {
     icon: LayoutGrid,
     title: "Live queue & courts",
     description:
-      "See who’s waiting, who’s on court, and which courts are open — all on one tablet-friendly dashboard.",
+      "See who’s waiting, who’s on court, and which courts are open — one tablet-friendly dashboard for the whole gym.",
   },
   {
     icon: Shuffle,
-    title: "Smart court matchups",
+    title: "Smart matchups",
     description:
-      "Balance partners, spot repeat matchups, and shuffle or swap players in before you fill the next court.",
+      "Balance partners, spot repeat foursomes, and shuffle or swap players before you fill the next court.",
   },
   {
     icon: QrCode,
     title: "QR player check-in",
     description:
-      "New and returning players join the queue in seconds. Volunteers can help without learning a complex system.",
+      "New and returning players join in seconds. Volunteers help without learning a complex system.",
   },
   {
     icon: BarChart3,
     title: "Leaderboards & history",
     description:
-      "Session standings, match history, and spectator views keep everyone aligned without shouting across courts.",
+      "Session standings and match history keep everyone aligned — no debates about who won or who’s up next.",
   },
-];
+  {
+    icon: Trophy,
+    title: "Built for open play",
+    description:
+      "Recreation centers, church gyms, and clubs get calm rotations without spreadsheets or shouting across courts.",
+  },
+] as const;
+
+const STEPS = [
+  {
+    step: "1",
+    title: "Open",
+    description: `Start a session in the browser on your tablet or laptop. No app install — ${APP_NAME} is ready when players walk in.`,
+  },
+  {
+    step: "2",
+    title: "Queue",
+    description:
+      "Players check in with QR or name. The live queue shows who’s waiting and which courts are free.",
+  },
+  {
+    step: "3",
+    title: "Play",
+    description:
+      "Fill courts, shuffle fair matchups, and keep the leaderboard honest while you stay on the floor.",
+  },
+] as const;
+
+const REVIEWS = [
+  {
+    quote:
+      "We stopped arguing about who’s up next. The tablet shows the queue and the leaderboard just works.",
+    name: "Marcus T.",
+    detail: "Club open play · 6 courts",
+  },
+  {
+    quote:
+      "Volunteers figured it out in one night. QR check-in cut the door line in half.",
+    name: "Priya S.",
+    detail: "Recreation center",
+  },
+  {
+    quote:
+      "I used to run rotations from a whiteboard. Now courts turn over clean and players actually trust the order.",
+    name: "Derek L.",
+    detail: "Church gym nights",
+  },
+  {
+    quote:
+      "Spectators follow the leaderboard on their phones. I can stay courtside instead of answering the same question fifty times.",
+    name: "Elena R.",
+    detail: "Weekly drop-in",
+  },
+  {
+    quote:
+      "Finally something built for pickleball open play — not a generic tournament tool with a queue bolted on.",
+    name: "Jordan K.",
+    detail: "Facility manager",
+  },
+  {
+    quote:
+      "Quick play got us running the same night. We signed up later when we wanted saved sessions.",
+    name: "Aisha M.",
+    detail: "Community club",
+  },
+] as const;
+
+const FAQS = [
+  {
+    question: `Is ${APP_NAME} free?`,
+    answer:
+      "Yes. You can run open play in the browser for free with Quick Play, or create an account to save sessions and manage multiple games.",
+  },
+  {
+    question: "Do I need to install an app?",
+    answer:
+      "No. It runs in the browser on your tablet, laptop, or phone — ideal for a courtside operator station.",
+  },
+  {
+    question: "Who is it for?",
+    answer:
+      "Organizers running recreation open play, club nights, and church gym sessions who need a live queue, fair rotations, and a shared leaderboard.",
+  },
+  {
+    question: "Can players check themselves in?",
+    answer:
+      "Yes. Players can join with QR check-in or you can add them from the operator view. Either way, the queue stays in sync.",
+  },
+  {
+    question: "Does it work for singles and doubles?",
+    answer:
+      "Yes. Court layouts and matchups support common open-play formats so you can keep rotations moving.",
+  },
+] as const;
 
 const marketingLinkClass = (
   variant: "ghost" | "default" | "outline",
@@ -76,20 +154,35 @@ export function MarketingLandingPage() {
     <>
       <MarketingLandingTheme />
       <div className="marketing-landing">
+        <a href="#main" className="marketing-landing__skip">
+          Skip to content
+        </a>
+
         <header className="marketing-landing__nav relative z-20">
           <div className="marketing-landing__container marketing-landing__nav-inner">
-            <img
-              src="/assets/images/paddlestacks_logo.png"
-              alt={APP_NAME}
-              className="marketing-landing__brand-logo"
-            />
+            <a href="/" className="marketing-landing__brand-link" aria-label={`${APP_NAME} home`}>
+              <img
+                src="/assets/images/paddlestacks_logo.png"
+                alt={APP_NAME}
+                className="marketing-landing__brand-logo"
+              />
+            </a>
+
+            <nav className="marketing-landing__nav-links" aria-label="Primary">
+              {NAV_LINKS.map((link) => (
+                <a key={link.href} href={link.href} className="marketing-landing__nav-link">
+                  {link.label}
+                </a>
+              ))}
+            </nav>
+
             <nav className="marketing-landing__nav-actions relative z-20 flex items-center gap-2 sm:gap-3">
               <a
                 href="/signup?saveQuickPlay=1&tab=existing"
                 className={marketingLinkClass(
                   "ghost",
                   "default",
-                  "marketing-landing__nav-cta text-emerald-950 hover:bg-emerald-100/80",
+                  "marketing-landing__nav-cta marketing-landing__nav-cta--ghost",
                 )}
               >
                 Sign in
@@ -99,7 +192,7 @@ export function MarketingLandingPage() {
                 className={marketingLinkClass(
                   "default",
                   "default",
-                  "marketing-landing__nav-cta bg-emerald-600 text-white hover:bg-emerald-700",
+                  "marketing-landing__nav-cta marketing-landing__nav-cta--solid",
                 )}
               >
                 Get started
@@ -108,127 +201,174 @@ export function MarketingLandingPage() {
           </div>
         </header>
 
-        <main>
+        <main id="main">
           <section className="marketing-landing__hero">
-            <div className="marketing-landing__container grid items-center gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:gap-10">
-              <div className="relative z-10 space-y-6">
-                <p className="marketing-landing__eyebrow">Open play queue manager</p>
-                <h1 className="marketing-landing__headline">
-                  Less queue chaos. More time on court.
-                </h1>
-                <p className="marketing-landing__lead">
-                  {APP_NAME} keeps your queue, courts, and player check-in in one place — so you
-                  spend less time coordinating and more time on the courts.
-                </p>
-                <div className="relative z-20 flex flex-wrap gap-3">
-                  <a
-                    href="/play"
-                    className={marketingLinkClass("default", "lg", "bg-emerald-600 text-white hover:bg-emerald-700")}
-                  >
-                    Start NOW! It's absolutely FREE!
-                  </a>
-                </div>
-                <p className="text-sm text-emerald-900/70">
-                  No install required — runs in the browser on your tablet or laptop.
-                </p>
-                <MarketingLandingWatchDemo />
+            <div className="marketing-landing__container marketing-landing__hero-inner">
+              <p className="marketing-landing__eyebrow">Open play · Queue · Courts</p>
+              <h1 className="marketing-landing__headline">
+                Less queue chaos.
+                <span className="marketing-landing__headline-accent"> More time on court.</span>
+              </h1>
+              <p className="marketing-landing__lead marketing-landing__lead--center">
+                {APP_NAME} turns open play into a calm rotation — live queue, fair matchups, QR
+                check-in, and a leaderboard everyone can trust. No spreadsheets. No whiteboard
+                arguments.
+              </p>
+              <div className="marketing-landing__hero-actions relative z-20">
+                <a
+                  href="/play"
+                  className={marketingLinkClass(
+                    "default",
+                    "lg",
+                    "marketing-landing__cta-primary",
+                  )}
+                >
+                  Start free — no install
+                </a>
+                <a
+                  href="/signup?saveQuickPlay=1"
+                  className={marketingLinkClass(
+                    "outline",
+                    "lg",
+                    "marketing-landing__cta-secondary",
+                  )}
+                >
+                  Create account
+                </a>
               </div>
+              <p className="marketing-landing__hero-proof">
+                Free in the browser · Tablet-ready · Built for pickleball open play
+              </p>
+              <MarketingLandingWatchDemo />
+            </div>
 
-              <LandingDevicePreview className="mx-auto w-full max-w-2xl lg:max-w-none" />
+            <div className="marketing-landing__container marketing-landing__hero-preview">
+              <LandingDevicePreview className="mx-auto w-full max-w-3xl" />
             </div>
           </section>
 
           <LandingLiveStats />
 
-          <section className="marketing-landing__section marketing-landing__section--muted">
-            <div className="marketing-landing__container space-y-10">
-              <div className="mx-auto max-w-3xl text-center">
-                <h2 className="marketing-landing__section-title">Does this sound familiar?</h2>
+          <section id="features" className="marketing-landing__section">
+            <div className="marketing-landing__container space-y-12">
+              <div className="mx-auto max-w-2xl text-center">
+                <h2 className="marketing-landing__section-title">
+                  Run open play in the time it takes to call “ball on.”
+                </h2>
                 <p className="marketing-landing__section-lead">
-                  Open play grows fast. Spreadsheets and whiteboards rarely keep up when courts turn
-                  over every fifteen minutes.
+                  Every other system makes you do the coordinating. {APP_NAME} keeps the queue
+                  honest, then gets out of the way.
                 </p>
               </div>
-              <div className="grid gap-6 md:grid-cols-2">
-                {PAIN_POINTS.map((group) => (
-                  <article key={group.side} className="marketing-landing__card space-y-4">
-                    <h3 className="text-lg font-semibold text-emerald-950">{group.title}</h3>
-                    <ul className="space-y-3 text-sm leading-relaxed text-emerald-900/85">
-                      {group.items.map((item) => (
-                        <li key={item} className="flex gap-2.5">
-                          <span className="mt-2 size-1.5 shrink-0 rounded-full bg-amber-400" aria-hidden />
-                          <span>{item}</span>
-                        </li>
-                      ))}
-                    </ul>
+
+              <div className="marketing-landing__feature-grid">
+                {FEATURES.map((feature) => (
+                  <article key={feature.title} className="marketing-landing__feature-card">
+                    <div className="marketing-landing__feature-icon" aria-hidden>
+                      <feature.icon className="size-5" />
+                    </div>
+                    <h3>{feature.title}</h3>
+                    <p>{feature.description}</p>
                   </article>
                 ))}
               </div>
             </div>
           </section>
 
-          <section id="how-it-works" className="marketing-landing__section">
-            <div className="marketing-landing__container space-y-10">
-              <div className="mx-auto max-w-3xl text-center">
-                <h2 className="marketing-landing__section-title">How {APP_NAME} works</h2>
-                <p className="marketing-landing__section-lead">
-                  Built for recreation centers, church gyms, and club open play — intuitive enough for
-                  volunteers, powerful enough for weekly operators.
+          <section id="how-it-works" className="marketing-landing__section marketing-landing__section--muted">
+            <div className="marketing-landing__container space-y-12">
+              <div className="mx-auto max-w-2xl text-center">
+                <h2 className="marketing-landing__section-title">
+                  From door to first game in three steps.
+                </h2>
+              </div>
+              <ol className="marketing-landing__steps">
+                {STEPS.map((step) => (
+                  <li key={step.step} className="marketing-landing__step">
+                    <span className="marketing-landing__step-num" aria-hidden>
+                      {step.step}
+                    </span>
+                    <h3>{step.title}</h3>
+                    <p>{step.description}</p>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          </section>
+
+          <section id="reviews" className="marketing-landing__section">
+            <div className="marketing-landing__container space-y-12">
+              <div className="mx-auto max-w-2xl text-center">
+                <h2 className="marketing-landing__section-title">
+                  Organizers who used to chase whiteboards.
+                </h2>
+                <p className="marketing-landing__section-lead marketing-landing__section-lead--punch">
+                  Now they don’t.
                 </p>
               </div>
-              <div className="grid gap-5 sm:grid-cols-2">
-                {FEATURES.map((feature) => (
-                  <article key={feature.title} className="marketing-landing__card flex gap-4">
-                    <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
-                      <feature.icon className="size-5" aria-hidden />
+              <div className="marketing-landing__reviews">
+                {REVIEWS.map((review) => (
+                  <figure key={review.name} className="marketing-landing__review">
+                    <div className="marketing-landing__stars" aria-label="5 out of 5 stars">
+                      ★★★★★
                     </div>
-                    <div className="space-y-2">
-                      <h3 className="font-semibold text-emerald-950">{feature.title}</h3>
-                      <p className="text-sm leading-relaxed text-emerald-900/80">{feature.description}</p>
-                    </div>
-                  </article>
+                    <blockquote>“{review.quote}”</blockquote>
+                    <figcaption>
+                      <span className="marketing-landing__review-name">{review.name}</span>
+                      <span className="marketing-landing__review-detail">{review.detail}</span>
+                    </figcaption>
+                  </figure>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          <section id="faq" className="marketing-landing__section marketing-landing__section--muted">
+            <div className="marketing-landing__container marketing-landing__faq-wrap">
+              <h2 className="marketing-landing__section-title text-center">Questions, answered.</h2>
+              <div className="marketing-landing__faq">
+                {FAQS.map((item) => (
+                  <details key={item.question} className="marketing-landing__faq-item">
+                    <summary>{item.question}</summary>
+                    <p>{item.answer}</p>
+                  </details>
                 ))}
               </div>
             </div>
           </section>
 
           <section className="marketing-landing__section marketing-landing__section--accent">
-            <div className="marketing-landing__container grid items-center gap-8 lg:grid-cols-[minmax(0,1fr)_auto]">
-              <div className="space-y-4">
+            <div className="marketing-landing__container marketing-landing__cta-band">
+              <div className="space-y-4 text-center sm:text-left">
                 <h2 className="marketing-landing__section-title text-white">
-                  Calmer courts, happier players
+                  Spend your night playing, not policing the queue.
                 </h2>
-                <p className="max-w-2xl text-base leading-relaxed text-emerald-50/90">
-                  Run your next open play with a clear queue, fair rotations, and a leaderboard
-                  everyone can trust. Sign in to save multiple sessions, or jump in with a quick
-                  browser session tonight.
+                <p className="marketing-landing__cta-band-lead">
+                  Start a free session in under a minute — or create an account to save every open
+                  play night.
                 </p>
-                <blockquote className="border-l-2 border-amber-300/80 pl-4 text-sm italic text-emerald-50/85">
-                  “We stopped arguing about who’s up next. The tablet shows the queue and the
-                  leaderboard just works.”
-                </blockquote>
               </div>
-              <div className="relative z-20 flex flex-col gap-3 sm:flex-row lg:flex-col">
-                <a
-                  href="/signup?saveQuickPlay=1"
-                  className={marketingLinkClass(
-                    "default",
-                    "lg",
-                    "bg-white text-emerald-800 hover:bg-emerald-50",
-                  )}
-                >
-                  Create free account
-                </a>
+              <div className="relative z-20 flex flex-col gap-3 sm:flex-row sm:justify-center lg:justify-end">
                 <a
                   href="/play"
                   className={marketingLinkClass(
-                    "outline",
+                    "default",
                     "lg",
-                    "border-white/40 bg-transparent text-white hover:bg-white/10",
+                    "bg-white text-[var(--marketing-ink)] hover:bg-[var(--marketing-foam)]",
                   )}
                 >
                   <Users className="size-4" aria-hidden />
                   Quick play
+                </a>
+                <a
+                  href="/signup?saveQuickPlay=1"
+                  className={marketingLinkClass(
+                    "outline",
+                    "lg",
+                    "border-white/35 bg-transparent text-white hover:bg-white/10",
+                  )}
+                >
+                  Create free account
                 </a>
               </div>
             </div>
@@ -236,9 +376,10 @@ export function MarketingLandingPage() {
         </main>
 
         <footer className="marketing-landing__footer">
-          <div className="marketing-landing__container flex flex-col items-center justify-between gap-3 py-8 text-center text-sm text-emerald-900/70 sm:flex-row sm:text-left">
+          <div className="marketing-landing__container marketing-landing__footer-inner">
             <p suppressHydrationWarning>
-              © {new Date().getFullYear()} {APP_NAME}. Open-play queue & court flow.
+              © {new Date().getFullYear()} {APP_NAME} v{APP_VERSION}. Open-play queue & court
+              flow.
             </p>
             <DeveloperCreditLink marketingLight />
           </div>

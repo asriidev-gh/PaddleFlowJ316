@@ -3,6 +3,7 @@
 import type { PlayerPhotoRef } from "@/components/game/player-avatar";
 import { PlayerAvatar, PlayerProfileTrigger } from "@/components/game/player-avatar";
 import { PlayerGenderPill } from "@/components/game/player-gender-pill";
+import { PlayerSkillLevelPill } from "@/components/game/player-skill-level-pill";
 import {
   formatSessionRecordWithRankLabel,
   getPlayerLeaderboardRank,
@@ -66,6 +67,7 @@ function SinglesPlayerSlot({
             <span className="court-player-name--full">{courtName}</span>
           </PlayerProfileTrigger>
           <PlayerGenderPill gender={player.gender} birthdate={player.birthdate} />
+          <PlayerSkillLevelPill player={player} />
         </span>
         <p className="singles-court__record">{sessionRecordLabel}</p>
       </div>

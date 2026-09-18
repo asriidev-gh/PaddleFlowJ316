@@ -2947,6 +2947,7 @@ export function GameDashboard({ mode = "operator", quickGameSurface }: GameDashb
             }
             replacePendingKey={courtReplacePendingKey}
             hideEndGame={hideControls}
+            courtTimeLimitMinutes={game.courtTimeLimitMinutes ?? null}
             onEndGame={
               hideControls
                 ? () => {}

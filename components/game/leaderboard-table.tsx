@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/table";
 
 import { FirstTimerPill, resolveLeaderboardPlayerId, type LeaderboardRow } from "@/components/game/leaderboard-standings";
+import { PlayerSkillLevelPill } from "@/components/game/player-skill-level-pill";
 import { PlayerEndorsementStatusBadge } from "@/components/game/player-endorsement-status-badge";
 import { UndefeatedBadge } from "@/components/game/undefeated-badge";
 import { isSessionUndefeated } from "@/lib/games-played-map";
@@ -50,6 +51,7 @@ export function LeaderboardTable({
                     <PlayerNameWithPhoto player={row}>
                       {formatPlayerTableName(row.firstName, row.lastName)}
                     </PlayerNameWithPhoto>
+                    <PlayerSkillLevelPill player={row} />
                     {row.isFirstTimer ? <FirstTimerPill /> : null}
                     {isSessionUndefeated({ wins: row.wins, losses: row.losses }) ? (
                       <UndefeatedBadge className="leaderboard-undefeated-badge" />

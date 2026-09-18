@@ -48,6 +48,8 @@ export type CreateLocalLiveQueueSessionInput = {
   checkInAllPlayers: boolean;
   gameMode?: "doubles" | "singles";
   matchingType?: "auto-balanced" | "winner-loser-groups" | "mixed-doubles";
+  /** Max play minutes per court; omit or null to disable. */
+  courtTimeLimitMinutes?: number | null;
 };
 
 function buildLocalPlayer(
@@ -157,6 +159,9 @@ export function createLocalLiveQueueSession(
       liveQueue: false,
       gameMode: input.gameMode ?? "doubles",
       matchingType: input.matchingType ?? "auto-balanced",
+      ...(input.courtTimeLimitMinutes != null && input.courtTimeLimitMinutes > 0
+        ? { courtTimeLimitMinutes: input.courtTimeLimitMinutes }
+        : { courtTimeLimitMinutes: null }),
       ...(quickGamePersistence ? { quickGamePersistence } : {}),
     },
     queue,
@@ -297,6 +302,7 @@ export function patchQuickGameMetadata(
     courtCount: number;
     allowManualPlayerAdd: boolean;
     allowManualCourtAdd: boolean;
+    courtTimeLimitMinutes?: number | null;
   },
 ): OperatorFullPayload {
   return {
@@ -313,6 +319,10 @@ export function patchQuickGameMetadata(
       courtCount: fields.courtCount,
       allowManualPlayerAdd: fields.allowManualPlayerAdd,
       allowManualCourtAdd: fields.allowManualCourtAdd,
+      courtTimeLimitMinutes:
+        fields.courtTimeLimitMinutes != null && fields.courtTimeLimitMinutes > 0
+          ? fields.courtTimeLimitMinutes
+          : null,
     },
   };
 }

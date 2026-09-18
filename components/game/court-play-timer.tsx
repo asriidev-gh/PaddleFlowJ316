@@ -53,9 +53,11 @@ function PlayTimerIcon() {
 export function CourtInPlayElapsedPanel({
   clock,
   className,
+  overTime = false,
 }: {
   clock: CourtTimerClock;
   className?: string;
+  overTime?: boolean;
 }) {
   const { canCancel, elapsedLabel, paused } = useCourtPlayTimer(clock);
 
@@ -65,18 +67,26 @@ export function CourtInPlayElapsedPanel({
     <div
       className={cn(
         "court-in-play-timer flex h-11 w-full items-center gap-2.5 rounded-lg border px-3",
-        paused
-          ? "border-amber-500/25 bg-amber-500/5"
-          : "border-emerald-500/25 bg-emerald-500/5",
+        overTime
+          ? "border-red-500/45 bg-red-500/10"
+          : paused
+            ? "border-amber-500/25 bg-amber-500/5"
+            : "border-emerald-500/25 bg-emerald-500/5",
         className,
       )}
       aria-live="polite"
-      aria-label={paused ? `Paused at ${elapsedLabel}` : `Playing for ${elapsedLabel}`}
+      aria-label={
+        overTime
+          ? `Court time limit reached — ${elapsedLabel}`
+          : paused
+            ? `Paused at ${elapsedLabel}`
+            : `Playing for ${elapsedLabel}`
+      }
     >
       <PlayTimerIcon />
       <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
         <span className="truncate text-left text-sm font-medium text-foreground">
-          {paused ? "Paused" : "Playing"}
+          {overTime ? "Time limit" : paused ? "Paused" : "Playing"}
         </span>
         <span
           className={cn(

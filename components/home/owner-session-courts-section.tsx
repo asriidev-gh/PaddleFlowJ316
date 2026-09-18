@@ -6,6 +6,7 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { FillCourtFlow, type FillCourtFlowHandle } from "@/components/game/fill-court-flow";
+import { CourtsViewMatchHistoryPanel } from "@/components/game/courts-view-match-history-panel";
 import { DashboardPanelFullscreenButton } from "@/components/game/dashboard-panel-fullscreen-button";
 import { GameCourtsGrid } from "@/components/game/game-courts-grid";
 import { SpectatorNextOnQueueButton } from "@/components/game/spectator-next-on-queue-dialog";
@@ -275,6 +276,7 @@ export function OwnerSessionCourtsSection({
   ) : null;
 
   return (
+    <div className="space-y-4">
     <Card
       ref={courtsSectionRef}
       className="glass-panel courts-panel dashboard-panel dashboard-panel--courts"
@@ -362,6 +364,9 @@ export function OwnerSessionCourtsSection({
         showPlayerPhotos={sessionShowPlayerPhotos}
         layoutVariant="pickleball"
         courtTheme={courtTheme}
+        courtTimeLimitMinutes={
+          localPayload?.game.courtTimeLimitMinutes ?? session.courtTimeLimitMinutes ?? null
+        }
         showLeaderboardRank
         summaryAddon={
           <SpectatorNextOnQueueButton
@@ -476,5 +481,11 @@ export function OwnerSessionCourtsSection({
       ) : null}
       </CardContent>
     </Card>
+    <CourtsViewMatchHistoryPanel
+      gameId={session.gameId}
+      editable={canOperateSession}
+      localMatches={isBrowserQuickGame ? (localPayload?.matches ?? []) : null}
+    />
+    </div>
   );
 }

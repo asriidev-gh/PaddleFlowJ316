@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useCallback, useMemo, useRef } from "react";
 
 import { CourtEndGameDialog } from "@/components/game/court-end-game-dialog";
+import { CourtsViewMatchHistoryPanel } from "@/components/game/courts-view-match-history-panel";
 import { DashboardPanelFullscreenButton } from "@/components/game/dashboard-panel-fullscreen-button";
 import {
   CourtsViewLayoutToggle,
@@ -181,6 +182,7 @@ export function SinglesSessionCourtsSection({
 
   return (
     <GamePlayerProfileProvider profileEnabled>
+    <div className="space-y-4">
       <Card
         ref={courtsSectionRef}
         className="glass-panel courts-panel dashboard-panel dashboard-panel--courts"
@@ -244,6 +246,9 @@ export function SinglesSessionCourtsSection({
             layout={layout}
             showPlayerPhotos={sessionShowPlayerPhotos}
             courtTheme={courtTheme}
+            courtTimeLimitMinutes={
+              localPayload?.game.courtTimeLimitMinutes ?? session.courtTimeLimitMinutes ?? null
+            }
             summaryAddon={
               <SpectatorNextOnQueueButton
                 queue={queueWithStats}
@@ -299,6 +304,12 @@ export function SinglesSessionCourtsSection({
           />
         </CardContent>
       </Card>
+      <CourtsViewMatchHistoryPanel
+        gameId={session.gameId}
+        editable
+        localMatches={isBrowserQuickGame ? (localPayload?.matches ?? []) : null}
+      />
+    </div>
     </GamePlayerProfileProvider>
   );
 }

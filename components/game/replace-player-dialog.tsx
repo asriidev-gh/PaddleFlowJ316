@@ -6,6 +6,7 @@ import { ArrowLeftRight, ChevronLeft, ChevronRight } from "lucide-react";
 import type { QueueEntryView } from "@/components/game/queue-entry-row";
 import type { PlayerPhotoRef } from "@/components/game/player-avatar";
 import { PlayerGenderPill } from "@/components/game/player-gender-pill";
+import { PlayerSkillLevelPill } from "@/components/game/player-skill-level-pill";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { resolvePlayerPhotoUrl } from "@/lib/player-avatar-url";
@@ -55,6 +56,7 @@ function ReplaceDialogPlayerIdentity({
       </Avatar>
       <span className="min-w-0 truncate text-sm font-medium">{name}</span>
       <PlayerGenderPill gender={player.gender} birthdate={player.birthdate} />
+      <PlayerSkillLevelPill player={player} />
     </span>
   );
 }

@@ -10,6 +10,7 @@ import {
   type PlayerPhotoRef,
 } from "@/components/game/player-avatar";
 import { PlayerGenderPill } from "@/components/game/player-gender-pill";
+import { PlayerSkillLevelPill } from "@/components/game/player-skill-level-pill";
 import { PlayerEndorsementStatusBadge } from "@/components/game/player-endorsement-status-badge";
 import {
   formatSessionRecordLabel,
@@ -19,6 +20,7 @@ import {
   type PlayerSessionStats,
 } from "@/lib/games-played-map";
 import { isCourtTimerPaused, toCourtTimerClock } from "@/lib/court-cancel-grace";
+import { useCourtPlayTimer } from "@/components/game/court-play-timer";
 import {
   capitalizeNameWords,
   formatPlayerCourtName,
@@ -119,6 +121,7 @@ function TeamPlayers({
                       <span className="court-player-name--full">{courtName}</span>
                     </PlayerProfileTrigger>
                     <PlayerGenderPill gender={player.gender} birthdate={player.birthdate} />
+                    <PlayerSkillLevelPill player={player} />
                     {endorsementCount > 0 ? (
                       <PlayerEndorsementStatusBadge
                         count={endorsementCount}
@@ -205,6 +208,8 @@ type CourtCardProps = {
   onFillCourt?: () => void;
   /** Visual layout: standard cards or pickleball court diagram (Courts View). */
   layoutVariant?: "standard" | "pickleball";
+  /** Max play minutes; when elapsed reaches this, the card blinks red. */
+  courtTimeLimitMinutes?: number | null;
   showEndorsementInPlayerLabel?: boolean;
   getPlayerEndorsementCount?: (playerId: string) => number;
   onPlayerEndorsementClick?: (player: PlayerRef) => void;
@@ -236,6 +241,7 @@ export function CourtCard({
   fillCourtPending = false,
   onFillCourt,
   layoutVariant = "standard",
+  courtTimeLimitMinutes = null,
   showEndorsementInPlayerLabel = false,
   getPlayerEndorsementCount,
   onPlayerEndorsementClick,
@@ -245,13 +251,20 @@ export function CourtCard({
   const teamB = court.teamB?.playerIds ?? [];
   const timerClock = toCourtTimerClock(court);
   const isPaused = isCourtTimerPaused(timerClock);
+  const { elapsedMs } = useCourtPlayTimer(timerClock);
+  const overTimeLimit =
+    isActive &&
+    courtTimeLimitMinutes != null &&
+    courtTimeLimitMinutes > 0 &&
+    elapsedMs >= courtTimeLimitMinutes * 60_000;
   const usePickleballLayout = layoutVariant === "pickleball";
 
   return (
     <Card
       id={elementId ?? `court-card-${court.courtNumber}`}
-      className={`court-card overflow-hidden ${isActive ? "court-active" : "court-empty"}${isFilling ? " court-filling" : ""}${isClearing ? " court-clearing" : ""}${usePickleballLayout ? " court-card--pickleball" : ""}`}
+      className={`court-card overflow-hidden ${isActive ? "court-active" : "court-empty"}${isFilling ? " court-filling" : ""}${isClearing ? " court-clearing" : ""}${usePickleballLayout ? " court-card--pickleball" : ""}${overTimeLimit ? " court-over-time" : ""}`}
       data-court-status={court.status}
+      data-court-over-time={overTimeLimit ? "true" : undefined}
       aria-busy={isFilling || isClearing}
     >
       <CardHeader className="court-card-header flex flex-row items-start justify-between gap-2">
@@ -400,7 +413,10 @@ export function CourtCard({
                     onClick={onCancelAssignment}
                   />
                 ) : null}
-                <CourtInPlayElapsedPanel clock={timerClock} />
+                <CourtInPlayElapsedPanel
+                  clock={timerClock}
+                  overTime={overTimeLimit}
+                />
                 <div className="grid grid-cols-2 gap-2">
                   {onTogglePause ? (
                     <Button
@@ -438,7 +454,7 @@ export function CourtCard({
                 </div>
               </div>
             ) : isActive && court.startedAt ? (
-              <CourtInPlayElapsedPanel clock={timerClock} />
+              <CourtInPlayElapsedPanel clock={timerClock} overTime={overTimeLimit} />
             ) : null}
           </>
         ) : isFilling ? (

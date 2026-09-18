@@ -950,6 +950,7 @@ export function SinglesGameDashboard({ quickGameSurface }: SinglesGameDashboardP
               onFillCourt={
                 !isPastGame && canFill ? () => fillMutation.mutate(court.courtNumber) : undefined
               }
+              courtTimeLimitMinutes={payload.game.courtTimeLimitMinutes ?? null}
             />
           );
         })}

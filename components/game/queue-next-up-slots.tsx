@@ -10,6 +10,11 @@ type QueueNextUpSlotsProps = {
   entries: QueueEntryView[];
   /** Doubles: group slots 1–2 vs 3–4 with a vs divider. */
   showDoublesTeamPreview?: boolean;
+  /**
+   * Keep team columns stacked (for narrow hosts like dialogs).
+   * Avoids viewport `xl` side-by-side layout overflowing a ~max-w-xl panel.
+   */
+  stacked?: boolean;
   renderEntry: (
     entry: QueueEntryView,
     index: number,
@@ -32,6 +37,7 @@ function QueueNextUpVsDivider() {
 export function QueueNextUpSlots({
   entries,
   showDoublesTeamPreview = false,
+  stacked = false,
   renderEntry,
   compactName,
   className,
@@ -51,7 +57,13 @@ export function QueueNextUpSlots({
   const showVs = entries.length >= 3;
 
   return (
-    <div className={cn("queue-next-up-slots queue-next-up-matchup", className)}>
+    <div
+      className={cn(
+        "queue-next-up-slots queue-next-up-matchup",
+        stacked && "queue-next-up-matchup--stacked",
+        className,
+      )}
+    >
       <div className="queue-next-up-matchup__teams">
         <div className="queue-next-up-team queue-next-up-team--a">
           <p className="queue-next-up-team__label">Slots 1–2</p>

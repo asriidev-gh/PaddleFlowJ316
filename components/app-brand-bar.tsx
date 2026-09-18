@@ -17,12 +17,10 @@ import {
   getSpectatorMenuGameId,
   getSpectatorViewedGameId,
 } from "@/lib/leaderboard-navigation";
-import { APP_NAME } from "@/lib/app-config";
 import {
   getBrandShellClasses,
   isGameDashboardPath,
   isPublicAppPath,
-  isQuickPlayPath,
   isSpectatorPath,
   shouldHideAppBrandBar,
   shouldHideAppBrandBarForGuest,
@@ -68,8 +66,6 @@ function BrandTitle({
   );
   const label = useClubBrand ? (
     <ClubBrandLabel branding={clubBranding} />
-  ) : isQuickPlayPath(pathname) ? (
-    APP_NAME
   ) : (
     <AppLogo />
   );

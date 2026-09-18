@@ -1,6 +1,6 @@
 {
   "name": "ccf-pickleball-queue-manager",
-  "version": "0.1.0",
+  "version": "1.2.2",
   "private": true,
   "scripts": {
     "dev": "next dev --hostname 0.0.0.0 --webpack",
@@ -9,6 +9,7 @@
     "start": "next start",
     "lint": "eslint",
     "seed": "tsx scripts/seed.ts",
+    "capture:marketing-demos": "tsx scripts/capture-marketing-demos.ts",
     "db:export": "tsx scripts/db-export.ts",
     "db:restore": "tsx scripts/db-restore.ts",
     "db:export:collection": "tsx scripts/db-export-collection.ts",
@@ -71,6 +72,7 @@
     "@types/sanitize-html": "^2.16.1",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
+    "playwright": "^1.63.0",
     "tailwindcss": "^4",
     "tsx": "^4.22.3",
     "typescript": "^5"
