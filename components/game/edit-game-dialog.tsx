@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { OpenPlayTimeField } from "@/components/game/open-play-time-field";
 import { OpenPlayTypePicker } from "@/components/game/open-play-type-picker";
+import { CourtTimeLimitFields } from "@/components/play/quick-play-wizard-steps";
 import { NumberStepper } from "@/components/ui/number-stepper";
 import { operatorShellQueryKey } from "@/lib/fetch-operator-game";
 import type { OperatorShellPayload } from "@/lib/operator-payload";
@@ -28,6 +29,7 @@ import {
   MAX_PLAYER_DISPLAY_NAME_LENGTH,
   sanitizePlayerDisplayNameInput,
 } from "@/lib/player-profile-shared";
+import { DEFAULT_COURT_TIME_LIMIT_MINUTES } from "@/lib/quick-play-wizard-shared";
 
 export type EditGameDialogGame = {
   gameId: string;
@@ -59,6 +61,8 @@ type EditFormState = {
   strictPlayerCount: boolean;
   allowQrRegistration: boolean;
   allowManualPlayerAdd: boolean;
+  limitCourtTime: boolean;
+  courtTimeLimitMinutes: number;
   registrationMode: "self" | "owner";
   ownerPlayers: OwnerPlayerRow[];
 };
@@ -83,6 +87,8 @@ const INITIAL_FORM: EditFormState = {
   strictPlayerCount: false,
   allowQrRegistration: true,
   allowManualPlayerAdd: false,
+  limitCourtTime: false,
+  courtTimeLimitMinutes: DEFAULT_COURT_TIME_LIMIT_MINUTES,
   registrationMode: "self",
   ownerPlayers: [],
 };
@@ -148,6 +154,9 @@ export function EditGameDialog({ game, open, onOpenChange, onSaved }: EditGameDi
           data.game.openPlayTimeRange,
         );
 
+        const savedLimit = data.game.courtTimeLimitMinutes;
+        const hasLimit = savedLimit != null && savedLimit > 0;
+
         setForm({
           title: data.game.title,
           openPlayType: resolveStoredOpenPlayType(data.game.openPlayType),
@@ -157,6 +166,8 @@ export function EditGameDialog({ game, open, onOpenChange, onSaved }: EditGameDi
           strictPlayerCount: data.game.strictPlayerCount === true,
           allowQrRegistration: data.game.allowQrRegistration !== false,
           allowManualPlayerAdd: data.game.allowManualPlayerAdd === true,
+          limitCourtTime: hasLimit,
+          courtTimeLimitMinutes: hasLimit ? savedLimit : DEFAULT_COURT_TIME_LIMIT_MINUTES,
           registrationMode: data.game.registrationMode === "owner" ? "owner" : "self",
           ownerPlayers: (data.ownerPlayers ?? []).map(
             (player: {
@@ -226,6 +237,7 @@ export function EditGameDialog({ game, open, onOpenChange, onSaved }: EditGameDi
           form.openPlayToMeridiem as Meridiem,
         ),
         courtCount: form.courtCount,
+        courtTimeLimitMinutes: form.limitCourtTime ? form.courtTimeLimitMinutes : null,
       };
 
       if (isOwnerRegistration) {
@@ -270,6 +282,7 @@ export function EditGameDialog({ game, open, onOpenChange, onSaved }: EditGameDi
               courtCount: form.courtCount,
               allowQrRegistration: form.allowQrRegistration,
               allowManualPlayerAdd: isOwnerRegistration ? form.allowManualPlayerAdd : false,
+              courtTimeLimitMinutes: form.limitCourtTime ? form.courtTimeLimitMinutes : null,
               registrationMode: isOwnerRegistration ? "owner" : current.game.registrationMode,
             },
           };
@@ -537,6 +550,13 @@ export function EditGameDialog({ game, open, onOpenChange, onSaved }: EditGameDi
                   </label>
                 </>
               )}
+
+              <CourtTimeLimitFields
+                idPrefix="edit-live"
+                limitCourtTime={form.limitCourtTime}
+                courtTimeLimitMinutes={form.courtTimeLimitMinutes}
+                onChange={(patch) => setForm((prev) => ({ ...prev, ...patch }))}
+              />
             </>
           )}
         </div>

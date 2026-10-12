@@ -14,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { OpenPlayTimeField } from "@/components/game/open-play-time-field";
 import { OpenPlayTypePicker } from "@/components/game/open-play-type-picker";
 import {
+  CourtTimeLimitFields,
   QuickPlayFormatStep,
   QuickPlayGameFormatFields,
   QuickPlayPlayersStep,
@@ -498,6 +499,8 @@ export function CreateGameWizard() {
         openPlayFromMeridiem,
         openPlayToHour,
         openPlayToMeridiem,
+        limitCourtTime,
+        courtTimeLimitMinutes,
         ...formRest
       } = form;
 
@@ -508,6 +511,7 @@ export function CreateGameWizard() {
         openPlayToHour,
         openPlayToMeridiem as Meridiem,
       );
+      const courtTimeLimitValue = limitCourtTime ? courtTimeLimitMinutes : null;
 
       if (registrationMode === "owner" && liveQueue) {
         const minPlayers = liveQueueMinPlayers(form);
@@ -559,7 +563,7 @@ export function CreateGameWizard() {
           checkInAllPlayers: defaultCheckInAllPlayers,
           gameMode: form.gameMode,
           matchingType: form.matchingType,
-          courtTimeLimitMinutes: form.limitCourtTime ? form.courtTimeLimitMinutes : null,
+          courtTimeLimitMinutes: courtTimeLimitValue,
         });
         initializeQuickGameSession(gameId, session);
         seedLocalGameOperatorCache(queryClient, gameId);
@@ -583,6 +587,7 @@ export function CreateGameWizard() {
         title,
         registrationMode: registrationMode || undefined,
         liveQueue: registrationMode === "owner" ? liveQueue : true,
+        courtTimeLimitMinutes: courtTimeLimitValue,
       };
 
       if (registrationMode === "owner") {
@@ -816,6 +821,12 @@ export function CreateGameWizard() {
                   onChange={(courtCount) => setForm((prev) => ({ ...prev, courtCount }))}
                 />
               </div>
+              <CourtTimeLimitFields
+                idPrefix="create-live"
+                limitCourtTime={form.limitCourtTime}
+                courtTimeLimitMinutes={form.courtTimeLimitMinutes}
+                onChange={(patch) => setForm((prev) => ({ ...prev, ...patch }))}
+              />
               {registrationMode === "self" ? (
                 <>
                   <Separator />

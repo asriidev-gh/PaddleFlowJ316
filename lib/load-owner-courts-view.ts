@@ -10,7 +10,7 @@ import { PickleGame } from "@/models/PickleGame";
 import "@/models/Player";
 
 const ACTIVE_GAME_FIELDS =
-  "title gameId openPlayType courtCount status openPlayDate openPlayTimeRange gameMode matchingType";
+  "title gameId openPlayType courtCount status openPlayDate openPlayTimeRange gameMode matchingType courtTimeLimitMinutes";
 
 export async function loadOwnerCourtsView(ownerId: string): Promise<OwnerCourtsViewPayload> {
   const games = await PickleGame.find({ ownerId, status: "active" })
@@ -40,6 +40,10 @@ export async function loadOwnerCourtsView(ownerId: string): Promise<OwnerCourtsV
         openPlayTimeRange: game.openPlayTimeRange ?? null,
         gameMode: format.gameMode,
         matchingType: format.matchingType,
+        courtTimeLimitMinutes:
+          game.courtTimeLimitMinutes != null && game.courtTimeLimitMinutes > 0
+            ? game.courtTimeLimitMinutes
+            : null,
         courts: courts as unknown as OwnerCourtsViewPayload["sessions"][number]["courts"],
         queue: serializeQueueEntriesForPayload(
           queue as Parameters<typeof serializeQueueEntriesForPayload>[0],

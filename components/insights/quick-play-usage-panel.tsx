@@ -39,6 +39,11 @@ function formatWhen(value: string) {
   return new Date(value).toLocaleString();
 }
 
+function formatLocation(locationLabel: string | undefined) {
+  const label = locationLabel?.trim();
+  return label || "—";
+}
+
 export function QuickPlayUsagePanel() {
   const { data, isLoading, error } = useQuery({
     queryKey: ["insights-quick-play-usage"],
@@ -133,7 +138,7 @@ export function QuickPlayUsagePanel() {
                   </div>
                   <p className="caption mt-2">
                     Last seen {formatWhen(visitor.lastSeenAt)} · {visitor.lastDeviceCategory} ·{" "}
-                    {visitor.lastIpAddress || "unknown IP"}
+                    {visitor.lastIpAddress || "unknown IP"} · {formatLocation(visitor.locationLabel)}
                   </p>
                 </div>
               ))
@@ -150,13 +155,14 @@ export function QuickPlayUsagePanel() {
           {recentSessions.length === 0 ? (
             <p className="text-sm text-muted-foreground">No sessions recorded yet.</p>
           ) : (
-            <table className="w-full min-w-[56rem] text-left text-sm">
+            <table className="w-full min-w-[62rem] text-left text-sm">
               <thead>
                 <tr className="border-b border-border text-muted-foreground">
                   <th className="px-2 py-2 font-medium">When</th>
                   <th className="px-2 py-2 font-medium">Visitor</th>
                   <th className="px-2 py-2 font-medium">Visits</th>
                   <th className="px-2 py-2 font-medium">IP</th>
+                  <th className="px-2 py-2 font-medium">Location</th>
                   <th className="px-2 py-2 font-medium">Device</th>
                   <th className="px-2 py-2 font-medium">Format</th>
                   <th className="px-2 py-2 font-medium">Courts</th>
@@ -170,6 +176,7 @@ export function QuickPlayUsagePanel() {
                     <td className="px-2 py-2 font-mono text-xs">{session.visitorId}</td>
                     <td className="px-2 py-2 tabular-nums">{session.visitorSessionCount}</td>
                     <td className="px-2 py-2 font-mono text-xs">{session.ipAddress}</td>
+                    <td className="px-2 py-2 text-xs">{formatLocation(session.locationLabel)}</td>
                     <td className="px-2 py-2 capitalize">{session.deviceCategory}</td>
                     <td className="px-2 py-2">
                       {session.gameMode} · {session.openPlayType}

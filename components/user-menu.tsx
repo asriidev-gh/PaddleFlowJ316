@@ -1,11 +1,12 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CircleUser, LogOut, ScrollText, Settings, ToggleLeft, TrendingUp } from "lucide-react";
+import { CircleUser, HelpCircle, LogOut, ScrollText, Settings, ToggleLeft, TrendingUp } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { HelpCenterSheet } from "@/components/help/help-center-sheet";
 import { SettingsDialog } from "@/components/settings/settings-dialog";
 import { ThemeMenuItems } from "@/components/theme-menu";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,7 @@ export function UserMenu() {
   const queryClient = useQueryClient();
   const [menuOpen, setMenuOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
 
   const { data } = useQuery({
     queryKey: ["auth-me"],
@@ -110,6 +112,15 @@ export function UserMenu() {
                 <Settings />
                 Settings
               </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  setMenuOpen(false);
+                  setHelpOpen(true);
+                }}
+              >
+                <HelpCircle />
+                Help center
+              </DropdownMenuItem>
             </>
           ) : null}
           <DropdownMenuSeparator />
@@ -122,7 +133,10 @@ export function UserMenu() {
         </DropdownMenuContent>
       </DropdownMenu>
       {data?.user ? (
-        <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
+        <>
+          <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
+          <HelpCenterSheet open={helpOpen} onOpenChange={setHelpOpen} />
+        </>
       ) : null}
     </>
   );

@@ -86,6 +86,8 @@ import { minPlayersForGameFormat, resolveGameFormatSettings } from "@/lib/game-f
 import {
   getMixedDoublesPlayersValidationError,
   isMixedDoublesMatching,
+  MAX_COURT_TIME_LIMIT_MINUTES,
+  MIN_COURT_TIME_LIMIT_MINUTES,
 } from "@/lib/quick-play-wizard-shared";
 import { PLAYER_OPEN_PLAY_LEVELS, isValidOpenPlayTypeValue } from "@/lib/open-play-types";
 
@@ -96,6 +98,17 @@ const openPlayTypeSchema = z
 const openPlayDateSchema = z
   .string()
   .regex(/^\d{4}-\d{2}-\d{2}$/, "Open play date is required.");
+
+const courtTimeLimitMinutesSchema = z
+  .union([
+    z.null(),
+    z.coerce
+      .number()
+      .int()
+      .min(MIN_COURT_TIME_LIMIT_MINUTES)
+      .max(MAX_COURT_TIME_LIMIT_MINUTES),
+  ])
+  .optional();
 
 const venueGoogleMapEmbedUrlSchema = z
   .string()
@@ -153,6 +166,7 @@ export const createGameSchema = z
     matchingType: z
       .enum(["auto-balanced", "winner-loser-groups", "mixed-doubles"])
       .optional(),
+    courtTimeLimitMinutes: courtTimeLimitMinutesSchema,
   })
   .superRefine((data, ctx) => {
     const timeRangeValidation = validateOpenPlayTimeRangeString(data.openPlayTimeRange);
@@ -261,6 +275,7 @@ export const updateGameSchema = z
     strictPlayerCount: z.boolean().optional(),
     allowQrRegistration: z.boolean().optional(),
     allowManualPlayerAdd: z.boolean().optional(),
+    courtTimeLimitMinutes: courtTimeLimitMinutesSchema,
     ownerPlayers: z
       .array(
         z.object({

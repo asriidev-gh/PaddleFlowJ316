@@ -35,6 +35,7 @@ export type EphemeralQuickPlayUsageInsights = {
     visitorId: string;
     visitorSessionCount: number;
     ipAddress: string;
+    locationLabel: string;
     deviceCategory: string;
     userAgent: string;
     gameMode: string;
@@ -50,6 +51,7 @@ export type EphemeralQuickPlayUsageInsights = {
     firstSeenAt: string;
     lastSeenAt: string;
     lastIpAddress: string;
+    locationLabel: string;
     lastDeviceCategory: string;
   }>;
 };

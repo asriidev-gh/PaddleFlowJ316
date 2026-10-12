@@ -5,6 +5,10 @@ const ephemeralQuickPlayUsageSchema = new Schema(
     gameId: { type: String, required: true, trim: true, index: true },
     visitorId: { type: String, required: true, trim: true, index: true },
     ipAddress: { type: String, required: true, trim: true, maxlength: 64 },
+    geoCity: { type: String, trim: true, maxlength: 80, default: "" },
+    geoRegion: { type: String, trim: true, maxlength: 80, default: "" },
+    geoCountry: { type: String, trim: true, maxlength: 80, default: "" },
+    geoLabel: { type: String, trim: true, maxlength: 160, default: "" },
     userAgent: { type: String, trim: true, maxlength: 500, default: "" },
     deviceCategory: {
       type: String,

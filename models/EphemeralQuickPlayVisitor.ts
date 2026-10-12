@@ -7,6 +7,10 @@ const ephemeralQuickPlayVisitorSchema = new Schema(
     firstSeenAt: { type: Date, required: true, default: () => new Date() },
     lastSeenAt: { type: Date, required: true, default: () => new Date() },
     lastIpAddress: { type: String, trim: true, maxlength: 64, default: "" },
+    lastGeoCity: { type: String, trim: true, maxlength: 80, default: "" },
+    lastGeoRegion: { type: String, trim: true, maxlength: 80, default: "" },
+    lastGeoCountry: { type: String, trim: true, maxlength: 80, default: "" },
+    lastGeoLabel: { type: String, trim: true, maxlength: 160, default: "" },
     lastUserAgent: { type: String, trim: true, maxlength: 500, default: "" },
     lastDeviceCategory: {
       type: String,

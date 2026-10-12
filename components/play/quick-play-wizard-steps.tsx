@@ -228,6 +228,75 @@ export function QuickPlayGameFormatFields({
   );
 }
 
+export function CourtTimeLimitFields({
+  idPrefix,
+  limitCourtTime,
+  courtTimeLimitMinutes,
+  onChange,
+  className,
+}: {
+  idPrefix: string;
+  limitCourtTime: boolean;
+  courtTimeLimitMinutes: number;
+  onChange: (patch: {
+    limitCourtTime?: boolean;
+    courtTimeLimitMinutes?: number;
+  }) => void;
+  className?: string;
+}) {
+  return (
+    <div className={cn("space-y-3 rounded-xl border p-4", WIZARD_PANEL_BORDER, className)}>
+      <label
+        className={cn(
+          "flex cursor-pointer items-start gap-3 rounded-lg border px-4 py-3 transition-colors",
+          limitCourtTime
+            ? "border-primary/40 bg-primary/5"
+            : "border-border/70 bg-background/40",
+        )}
+      >
+        <Checkbox
+          checked={limitCourtTime}
+          onCheckedChange={(checked) =>
+            onChange({
+              limitCourtTime: checked === true,
+              courtTimeLimitMinutes:
+                courtTimeLimitMinutes > 0
+                  ? courtTimeLimitMinutes
+                  : DEFAULT_COURT_TIME_LIMIT_MINUTES,
+            })
+          }
+          className="mt-0.5"
+        />
+        <span className="space-y-1 leading-snug">
+          <span className="block text-sm font-medium">Limit court time usage</span>
+          <span className="block text-xs text-muted-foreground">
+            When a court hits the max play time, its border blinks red so you can rotate players.
+          </span>
+        </span>
+      </label>
+      {limitCourtTime ? (
+        <div className="space-y-2 pl-1">
+          <Label htmlFor={`${idPrefix}-court-time-limit`} className="text-sm">
+            Max time per court (minutes)
+          </Label>
+          <NumberStepper
+            id={`${idPrefix}-court-time-limit`}
+            min={MIN_COURT_TIME_LIMIT_MINUTES}
+            max={MAX_COURT_TIME_LIMIT_MINUTES}
+            value={courtTimeLimitMinutes}
+            inputClassName={WIZARD_PRIMARY_FIELD_BORDER}
+            buttonClassName={WIZARD_OUTLINE_BUTTON_BORDER}
+            onChange={(nextMinutes) => onChange({ courtTimeLimitMinutes: nextMinutes })}
+          />
+          <p className="text-xs text-muted-foreground">
+            Enter max minutes a court can stay in play before the alert.
+          </p>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 export function QuickPlayFormatStep({
   idPrefix,
   form,
@@ -313,56 +382,12 @@ export function QuickPlayFormatStep({
         />
       </div>
 
-      <div className={cn("space-y-3 rounded-xl border p-4", WIZARD_PANEL_BORDER)}>
-        <label
-          className={cn(
-            "flex cursor-pointer items-start gap-3 rounded-lg border px-4 py-3 transition-colors",
-            form.limitCourtTime
-              ? "border-primary/40 bg-primary/5"
-              : "border-border/70 bg-background/40",
-          )}
-        >
-          <Checkbox
-            checked={form.limitCourtTime}
-            onCheckedChange={(checked) =>
-              onFormChange({
-                limitCourtTime: checked === true,
-                courtTimeLimitMinutes:
-                  form.courtTimeLimitMinutes > 0
-                    ? form.courtTimeLimitMinutes
-                    : DEFAULT_COURT_TIME_LIMIT_MINUTES,
-              })
-            }
-            className="mt-0.5"
-          />
-          <span className="space-y-1 leading-snug">
-            <span className="block text-sm font-medium">Limit court time usage</span>
-            <span className="block text-xs text-muted-foreground">
-              When a court hits the max play time, its border blinks red so you can rotate
-              players.
-            </span>
-          </span>
-        </label>
-        {form.limitCourtTime ? (
-          <div className="space-y-2 pl-1">
-            <Label htmlFor={`${idPrefix}-court-time-limit`} className="text-sm">
-              Max time per court (minutes)
-            </Label>
-            <NumberStepper
-              id={`${idPrefix}-court-time-limit`}
-              min={MIN_COURT_TIME_LIMIT_MINUTES}
-              max={MAX_COURT_TIME_LIMIT_MINUTES}
-              value={form.courtTimeLimitMinutes}
-              inputClassName={WIZARD_PRIMARY_FIELD_BORDER}
-              buttonClassName={WIZARD_OUTLINE_BUTTON_BORDER}
-              onChange={(courtTimeLimitMinutes) => onFormChange({ courtTimeLimitMinutes })}
-            />
-            <p className="text-xs text-muted-foreground">
-              Enter max minutes a court can stay in play before the alert.
-            </p>
-          </div>
-        ) : null}
-      </div>
+      <CourtTimeLimitFields
+        idPrefix={idPrefix}
+        limitCourtTime={form.limitCourtTime}
+        courtTimeLimitMinutes={form.courtTimeLimitMinutes}
+        onChange={onFormChange}
+      />
     </div>
   );
 }

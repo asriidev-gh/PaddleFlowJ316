@@ -6,6 +6,7 @@ import { runWithDatabase } from "@/lib/db";
 import { ephemeralQuickPlayUsageSchema } from "@/lib/ephemeral-quick-play-usage-shared";
 import { recordEphemeralQuickPlayUsage } from "@/lib/ephemeral-quick-play-usage-server";
 import { formatZodError } from "@/lib/format-zod-error";
+import { resolveClientGeo } from "@/lib/geo-from-ip";
 
 /** Public: record anonymous ephemeral quick-play session usage (no game payload). */
 export async function POST(request: Request) {
@@ -17,6 +18,7 @@ export async function POST(request: Request) {
     }
 
     const ipAddress = resolveClientIp(request);
+    const geo = await resolveClientGeo(request, ipAddress);
     const userAgent =
       request.headers.get("user-agent")?.trim().slice(0, 500) ??
       parsed.data.visitorId.slice(0, 500);
@@ -30,6 +32,7 @@ export async function POST(request: Request) {
         ipAddress,
         userAgent,
         authUserId: authUser?.userId ?? null,
+        geo,
       });
 
       if (!result.recorded && result.reason === "rate_limited") {

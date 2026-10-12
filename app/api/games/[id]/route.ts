@@ -224,6 +224,15 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
           strictPlayerCount,
           allowQrRegistration,
           allowManualPlayerAdd: usesOwnerRegistration ? allowManualPlayerAdd : false,
+          ...(parsed.data.courtTimeLimitMinutes !== undefined
+            ? {
+                courtTimeLimitMinutes:
+                  parsed.data.courtTimeLimitMinutes != null &&
+                  parsed.data.courtTimeLimitMinutes > 0
+                    ? parsed.data.courtTimeLimitMinutes
+                    : null,
+              }
+            : {}),
           ...(usesOwnerRegistration ? { registrationMode: "owner" as const } : {}),
         },
       },

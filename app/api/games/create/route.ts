@@ -69,6 +69,10 @@ export async function POST(request: Request) {
       registrationMode: payload.registrationMode === "owner" ? "owner" : "self",
       gameMode,
       matchingType,
+      courtTimeLimitMinutes:
+        payload.courtTimeLimitMinutes != null && payload.courtTimeLimitMinutes > 0
+          ? payload.courtTimeLimitMinutes
+          : null,
       gameId,
       ownerId: authUser.userId,
       registerUrl,

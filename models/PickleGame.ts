@@ -35,6 +35,8 @@ const pickleGameSchema = new Schema(
     },
     allowManualPlayerAdd: { type: Boolean, required: true, default: false },
     liveQueue: { type: Boolean, required: true, default: true },
+    /** Max play minutes per court before over-time alert; null/undefined = off. */
+    courtTimeLimitMinutes: { type: Number, required: false, default: null, min: 5, max: 180 },
     registerUrl: { type: String, required: false },
     publicQrCodeDataUrl: { type: String, required: true },
     status: {

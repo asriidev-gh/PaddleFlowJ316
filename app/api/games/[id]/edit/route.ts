@@ -36,6 +36,10 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
         strictPlayerCount: game.strictPlayerCount === true,
         allowQrRegistration: game.allowQrRegistration !== false,
         allowManualPlayerAdd: game.allowManualPlayerAdd === true,
+        courtTimeLimitMinutes:
+          game.courtTimeLimitMinutes != null && game.courtTimeLimitMinutes > 0
+            ? game.courtTimeLimitMinutes
+            : null,
         registrationMode: usesOwnerRegistration ? "owner" : "self",
       },
       ownerPlayers,
