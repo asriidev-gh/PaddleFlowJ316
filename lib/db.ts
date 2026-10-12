@@ -1,6 +1,16 @@
+import dns from "node:dns";
+
 import mongoose from "mongoose";
 
 import { isInfrastructureError } from "@/lib/infrastructure-error";
+
+// Dev only: some Windows setups (Hyper-V/Docker/WSL) leave Node's resolver on 127.0.0.1,
+// which breaks the mongodb+srv SRV lookup (querySrv ECONNREFUSED).
+if (process.env.NODE_ENV !== "production") {
+  console.log("[db] dev DNS servers before override:", dns.getServers());
+  dns.setServers(["8.8.8.8", "1.1.1.1"]);
+  console.log("[db] dev DNS servers after override:", dns.getServers());
+}
 
 type MongooseCache = {
   conn: typeof mongoose | null;
