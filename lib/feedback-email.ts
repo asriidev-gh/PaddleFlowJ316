@@ -102,3 +102,67 @@ export async function sendFeedbackNotificationEmail(
 
   return { ok: true };
 }
+
+type FeedbackConfirmationInput = {
+  organizerName: string;
+  organizerEmail: string;
+  message: string;
+};
+
+function buildFeedbackConfirmationHtml(input: FeedbackConfirmationInput) {
+  const safeName = escapeHtml(input.organizerName);
+  const safeMessage = escapeHtml(input.message).replaceAll("\n", "<br />");
+
+  return `
+<!DOCTYPE html>
+<html lang="en">
+  <body style="margin:0;padding:0;background:#f8fafc;font-family:Arial,sans-serif;color:#0f172a;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f8fafc;padding:24px 12px;">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background:#ffffff;border:1px solid #e2e8f0;border-radius:16px;overflow:hidden;">
+            <tr>
+              <td style="padding:28px;">
+                <p style="margin:0 0 8px;font-size:13px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:#64748b;">${escapeHtml(APP_NAME)} · Help center</p>
+                <h1 style="margin:0 0 12px;font-size:22px;line-height:1.3;color:#0f172a;">We received your feedback</h1>
+                <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#334155;">
+                  Hi ${safeName}, thanks for reaching out. We read every message and will get back to you if we need more details.
+                </p>
+                <p style="margin:0 0 8px;font-size:13px;color:#64748b;">Here is a copy of what you sent:</p>
+                <div style="padding:16px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;font-size:15px;line-height:1.6;color:#0f172a;">
+                  ${safeMessage}
+                </div>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>`;
+}
+
+export async function sendFeedbackConfirmationEmail(
+  input: FeedbackConfirmationInput,
+): Promise<{ ok: true } | { ok: false; message: string }> {
+  const apiKey = getResendApiKey();
+  if (!apiKey) {
+    return { ok: false, message: "Email service is not configured." };
+  }
+
+  const supportEmail = getSupportEmail();
+  const resend = new Resend(apiKey);
+  const response = await resend.emails.send({
+    from: getResendFromEmail(),
+    to: input.organizerEmail,
+    ...(supportEmail ? { replyTo: supportEmail } : {}),
+    subject: `We received your feedback · ${APP_NAME}`,
+    html: buildFeedbackConfirmationHtml(input),
+  });
+
+  if (response.error) {
+    return { ok: false, message: response.error.message };
+  }
+
+  return { ok: true };
+}

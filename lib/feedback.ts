@@ -1,7 +1,10 @@
 import { Types } from "mongoose";
 
 import { isCloudinaryConfigured } from "@/lib/cloudinary";
-import { sendFeedbackNotificationEmail } from "@/lib/feedback-email";
+import {
+  sendFeedbackConfirmationEmail,
+  sendFeedbackNotificationEmail,
+} from "@/lib/feedback-email";
 import { uploadFeedbackAttachment } from "@/lib/feedback-upload";
 import {
   FEEDBACK_RATE_LIMIT_MS,
@@ -90,6 +93,13 @@ export async function createOrganizerFeedback(
     doc.emailDelivered = true;
     await doc.save();
   }
+
+  // Best-effort receipt for the sender; never blocks or fails the submission.
+  await sendFeedbackConfirmationEmail({
+    organizerName: user.name,
+    organizerEmail: user.email,
+    message,
+  }).catch(() => undefined);
 
   return {
     id: doc._id.toString(),
