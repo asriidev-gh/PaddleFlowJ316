@@ -34,6 +34,7 @@ import { cn, formatPlayerDisplayName } from "@/lib/utils";
 import { type GamePayload } from "@/lib/game-payload-mutations";
 import { isQuickGame } from "@/lib/local-game-id";
 import { readOperatorGamePayload, writeOperatorGamePayload } from "@/lib/operator-game-cache";
+import type { LeaderboardGamesPlayedRow } from "@/lib/games-played-map";
 
 export type MatchHistoryPlayer = {
   _id?: string;
@@ -137,15 +138,54 @@ function applyEditMatchScoreOptimistic(
   };
 }
 
+function updateLeaderboardFromDeletedMatch(
+  matchToBeDeleted: MatchHistoryView,
+  currentLeaderboard: LeaderboardGamesPlayedRow[]
+) {
+  const teamAPlayerIds = matchToBeDeleted?.teamAPlayerIds.map((player) => player._id)
+  const teamBPlayerIds = matchToBeDeleted?.teamBPlayerIds.map((player) => player._id)
+  const winnerTeam = matchToBeDeleted?.winnerTeam
+
+  let updatedLeaderboard = currentLeaderboard.map((board) => {
+    const playerId =  typeof board?.playerId === "string" ? board.playerId.trim().toString() : board?.playerId?._id?.toString();
+    const isTeamA = teamAPlayerIds.includes(playerId);
+    const isTeamB = teamBPlayerIds.includes(playerId);
+    const gamesPlayed = board.gamesPlayed ?? 0
+    const wins = board.wins ?? 0
+    const losses = board.losses ?? 0
+
+    if (isTeamA || isTeamB) {
+      board.gamesPlayed = Math.max(0, gamesPlayed - 1);
+      const playerTeam = isTeamA ? "A" : "B";
+
+      if (winnerTeam === playerTeam) {
+        board.wins = Math.max(0, wins - 1);
+      } else {
+        board.losses = Math.max(0, losses - 1);
+      }
+    }
+
+    return board
+  })
+
+  updatedLeaderboard = updatedLeaderboard.filter((board) => (board.gamesPlayed ?? 0) > 0)
+  return updatedLeaderboard
+}
+
 function applyDeleteMatchOptimistic(
   payload: GamePayload,
   matchId: string,
 ): GamePayload | null {
-  if (!payload.matches.some((match) => match._id === matchId)) return null;
+  const matches = payload.matches
+  const matchToBeDeleted = matches.find((match) => match._id === matchId)
 
+  if (!matchToBeDeleted) return null;
+
+  const updatedLeaderboard = updateLeaderboardFromDeletedMatch(matchToBeDeleted, payload.leaderboard)
   return {
     ...payload,
-    matches: payload.matches.filter((match) => match._id !== matchId),
+    leaderboard: updatedLeaderboard,
+    matches: matches.filter((match) => match._id !== matchId),
   };
 }
 
