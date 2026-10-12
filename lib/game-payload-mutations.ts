@@ -431,7 +431,7 @@ export function applyEndGameWithHistoryOptimistic(
   if (!court || court.status !== "active") return null;
 
   const base = applyEndGameOptimistic(payload, input);
-  if (!base || input.rematch) return base;
+  if (!base) return base;
 
   const teamA = court.teamA?.playerIds ?? [];
   const teamB = court.teamB?.playerIds ?? [];
