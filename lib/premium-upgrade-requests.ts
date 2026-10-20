@@ -18,6 +18,7 @@ import {
 import { getPremiumPaymentMethodConfig } from "@/lib/premium-payment-config";
 import { uploadPremiumPaymentProof } from "@/lib/premium-payment-upload";
 import { canUseLiveQueueing } from "@/lib/premium-access";
+import { sendPremiumDecisionEmail, sendPremiumRequestAdminEmail } from "@/lib/premium-email";
 import { isSuperAdminUserId } from "@/lib/superadmin";
 import { PremiumUpgradeRequest } from "@/models/PremiumUpgradeRequest";
 import { User } from "@/models/User";
@@ -130,7 +131,31 @@ export async function createPremiumUpgradeRequest(
     status: "pending",
   });
 
+  await notifySafely("admin premium request", () =>
+    sendPremiumRequestAdminEmail({
+      userName: user.name,
+      userEmail: user.email,
+      paymentMethodLabel: formatPremiumPaymentMethod(input.paymentMethod as PremiumPaymentMethod),
+      amountPhp: PREMIUM_ANNUAL_PRICE_PHP,
+      payerNote,
+      proofUrl: uploaded.proofUrl,
+      requestId: created._id.toString(),
+    }),
+  );
+
   return serializeRequest(created);
+}
+
+async function notifySafely(
+  label: string,
+  send: () => Promise<{ ok: true } | { ok: false; message: string }>,
+) {
+  try {
+    const result = await send();
+    if (!result.ok) console.warn(`[premium-email] ${label} not sent: ${result.message}`);
+  } catch (error) {
+    console.warn(`[premium-email] ${label} failed`, error);
+  }
 }
 
 type PremiumUpgradeRequestDoc = {
@@ -215,6 +240,13 @@ export async function reviewPremiumUpgradeRequest(input: {
     doc.reviewedByUserId = new Types.ObjectId(input.reviewerUserId);
     await doc.save();
     await User.findByIdAndUpdate(doc.userId, { $set: { isPremium: true } });
+    await notifySafely("premium approved", () =>
+      sendPremiumDecisionEmail({
+        userName: doc.userName,
+        userEmail: doc.userEmail,
+        decision: "approved",
+      }),
+    );
     return { message: "Premium access granted." };
   }
 
@@ -226,6 +258,13 @@ export async function reviewPremiumUpgradeRequest(input: {
     doc.reviewedAt = new Date();
     doc.reviewedByUserId = new Types.ObjectId(input.reviewerUserId);
     await doc.save();
+    await notifySafely("premium rejected", () =>
+      sendPremiumDecisionEmail({
+        userName: doc.userName,
+        userEmail: doc.userEmail,
+        decision: "rejected",
+      }),
+    );
     return { message: "Submission marked as not approved." };
   }
 
