@@ -7,8 +7,8 @@ import {
   Oswald,
   Outfit,
   Plus_Jakarta_Sans,
-  Roboto,
 } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import { AppBrandBar } from "@/components/app-brand-bar";
 import { AppFooter } from "@/components/app-footer";
@@ -29,10 +29,14 @@ const geistMono = Geist_Mono({
   display: "swap",
 });
 
-const roboto = Roboto({
+// Bundled locally: the Google Fonts fetch for Roboto fails in some build environments.
+const roboto = localFont({
   variable: "--font-roboto",
-  subsets: ["latin"],
-  weight: ["400", "500", "700"],
+  src: [
+    { path: "./fonts/roboto-latin-400-normal.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/roboto-latin-500-normal.woff2", weight: "500", style: "normal" },
+    { path: "./fonts/roboto-latin-700-normal.woff2", weight: "700", style: "normal" },
+  ],
   display: "swap",
 });
 
