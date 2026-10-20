@@ -3,7 +3,7 @@
 import { MessageCircleQuestion, Send, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, type FormEvent } from "react";
 
 import { HelpCenterSheet } from "@/components/help/help-center-sheet";
 import { Button } from "@/components/ui/button";
@@ -45,14 +45,26 @@ function relatedIds(answered: FaqEntry, ranked: FaqEntry[]): string[] {
   return [...new Set([...fromSearch, ...fallback])].slice(0, 3);
 }
 
+function subscribeNoop() {
+  return () => {};
+}
+
 /** Gate: the chat only mounts for logged-in users, so its state resets on logout. */
 export function FaqChatbot() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { data: authData } = useAuthMe();
+  // Auth data can be cached on the client but is never available during SSR,
+  // so wait until after hydration to avoid a server/client markup mismatch.
+  const mounted = useSyncExternalStore(
+    subscribeNoop,
+    () => true,
+    () => false,
+  );
 
   // Stay out of the way of public/player screens and the tablet queue dashboard.
   const hidden =
+    !mounted ||
     !authData?.user ||
     isPublicAppPath(pathname, searchParams.get("from")) ||
     isGameDashboardPath(pathname) ||
