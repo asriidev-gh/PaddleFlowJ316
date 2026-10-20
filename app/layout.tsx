@@ -12,6 +12,7 @@ import {
 import "./globals.css";
 import { AppBrandBar } from "@/components/app-brand-bar";
 import { AppFooter } from "@/components/app-footer";
+import { FaqChatbot } from "@/components/help/faq-chatbot";
 import { Providers } from "@/components/providers";
 import { APP_NAME } from "@/lib/app-config";
 
@@ -87,6 +88,9 @@ export default function RootLayout({
           </Suspense>
           <div className="flex min-h-0 flex-1 flex-col">{children}</div>
           <AppFooter />
+          <Suspense fallback={null}>
+            <FaqChatbot />
+          </Suspense>
           <Analytics />
         </Providers>
       </body>
