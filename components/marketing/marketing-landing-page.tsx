@@ -22,6 +22,7 @@ const NAV_LINKS = [
   { href: "#how-it-works", label: "How it works" },
   { href: "#reviews", label: "Reviews" },
   { href: "#community", label: "The community" },
+  { href: "/standings", label: "Leaderboard" },
   { href: "#faq", label: "FAQ" },
 ] as const;
 
