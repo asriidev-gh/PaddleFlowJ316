@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 
 import { DeveloperCreditLink } from "@/components/developer-credit-link";
+import { LandingCommunityPlayers } from "@/components/marketing/landing-community-players";
 import { LandingDevicePreview } from "@/components/marketing/landing-device-preview";
 import { LandingLiveStats } from "@/components/marketing/landing-live-stats";
 import { MarketingLandingTheme } from "@/components/marketing/marketing-landing-theme";
@@ -20,6 +21,7 @@ const NAV_LINKS = [
   { href: "#features", label: "Features" },
   { href: "#how-it-works", label: "How it works" },
   { href: "#reviews", label: "Reviews" },
+  { href: "#community", label: "The community" },
   { href: "#faq", label: "FAQ" },
 ] as const;
 
@@ -322,6 +324,8 @@ export function MarketingLandingPage() {
               </div>
             </div>
           </section>
+
+          <LandingCommunityPlayers />
 
           <section id="faq" className="marketing-landing__section marketing-landing__section--muted">
             <div className="marketing-landing__container marketing-landing__faq-wrap">
